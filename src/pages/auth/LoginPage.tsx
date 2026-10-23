@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Sparkles, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
@@ -20,7 +20,7 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    // For now, simulate successful login and navigate to admin overview
+    // Simulate successful login and navigate to admin overview
     navigate('/admin/overview');
   };
 
@@ -114,18 +114,14 @@ export const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Footer Link */}
+        {/* Footer Link (Navigates to /register-org) */}
         <div className="mt-8 text-center">
-          <a
-            href="#register"
-            onClick={(e) => {
-              e.preventDefault();
-              alert('Organization onboarding registration.');
-            }}
+          <Link
+            to="/register-org"
             className="text-sm font-medium text-[#5542f6] hover:underline"
           >
             New organization? Get started
-          </a>
+          </Link>
         </div>
 
         {/* Presentation Demo Auto-Fill */}
