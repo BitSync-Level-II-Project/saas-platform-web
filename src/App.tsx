@@ -11,6 +11,8 @@ import {
 import "./App.css";
 import { TemplateTable } from "./components/TemplateTable";
 import type { Template } from "./components/TemplateTable";
+import { useState } from "react";
+import { CreateTemplatePage } from "./components/CreateTemplatePage";
 import siteTraceLogo from "./assets/SiteTrace-logo.svg";
 
 const templates: Template[] = [
@@ -51,6 +53,7 @@ const menuItems = [
 ];
 
 function App() {
+  const [page, setPage] = useState<"list" | "create">("list");
   return (
     <div className="manager-layout">
       <aside className="sidebar">
@@ -112,29 +115,39 @@ function App() {
         </header>
 
         <main className="content">
-          <h1>Templates</h1>
-          <p>Reusable forms for your warehouses.</p>
+          {page === "list" ? (
+            <>
+              <h1>Templates</h1>
+              <p>Reusable forms for your warehouses.</p>
 
-          <div className="template-toolbar">
-            <input
-              className="search-input"
-              type="search"
-              placeholder="Search templates"
-              aria-label="Search templates"
-            />
+              <div className="template-toolbar">
+                <input
+                  className="search-input"
+                  type="search"
+                  placeholder="Search templates"
+                  aria-label="Search templates"
+                />
 
-            <select className="status-select" aria-label="Filter by status">
-              <option value="all">All statuses</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-            </select>
+                <select className="status-select" aria-label="Filter by status">
+                  <option value="all">All statuses</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
 
-            <button className="create-button" type="button">
-              Create template
-            </button>
-          </div>
+                <button
+                  className="create-button"
+                  type="button"
+                  onClick={() => setPage("create")}
+                >
+                  Create template
+                </button>
+              </div>
 
-          <TemplateTable templates={templates} />
+              <TemplateTable templates={templates} />
+            </>
+          ) : (
+            <CreateTemplatePage onBack={() => setPage("list")} />
+          )}
         </main>
       </div>
     </div>
