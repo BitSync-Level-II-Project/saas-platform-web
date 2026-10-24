@@ -3,11 +3,12 @@ import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import WarehouseFilters from './components/WarehouseFilters';
 import WarehouseTable from './components/WarehouseTable';
+import AddWarehouseModal from './components/AddWarehouseModal';
 import type { Warehouse } from './types';
 
 export default function App() {
-  // 1. Initial warehouses
-  const [warehouses] = useState<Warehouse[]>([
+  // 1. Initial 3 warehouses
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([
     {
       id: '1',
       name: 'Colombo warehouse',
@@ -38,7 +39,33 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  // 3. Filtered list based on user search and status dropdown
+  // 3. Modal open/close state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 4. Function to add a new warehouse to the list
+  const handleAddWarehouse = (newWarehouseData: {
+    name: string;
+    city: string;
+    address?: string;
+    supervisor: string;
+  }) => {
+    const newEntry: Warehouse = {
+      id: Date.now().toString(),
+      name: newWarehouseData.name,
+      city: newWarehouseData.city,
+      locations: 0,
+      supervisor:
+        newWarehouseData.supervisor === 'Assign later'
+          ? 'Unassigned'
+          : newWarehouseData.supervisor,
+      status: 'Active',
+    };
+
+    // Add new warehouse to top of list
+    setWarehouses((prev) => [newEntry, ...prev]);
+  };
+
+  // 5. Filter list dynamically based on search & status
   const filteredWarehouses = warehouses.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -51,16 +78,12 @@ export default function App() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleOpenAddModal = () => {
-    alert('Add warehouse modal will open here in the next step!');
-  };
-
   return (
     <div className="app-layout">
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="main-wrapper">
         <Topbar />
 
@@ -70,17 +93,24 @@ export default function App() {
             <p className="page-subtitle">Manage warehouses and their locations.</p>
           </header>
 
-          {/* Search, Filter, and Add Button Bar */}
+          {/* Filter Bar with Search, Dropdown & Add button */}
           <WarehouseFilters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
-            onAddClick={handleOpenAddModal}
+            onAddClick={() => setIsModalOpen(true)}
           />
 
-          {/* Dynamic Table */}
+          {/* Table */}
           <WarehouseTable warehouses={filteredWarehouses} />
+
+          {/* Add Warehouse Modal Dialog */}
+          <AddWarehouseModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onAddWarehouse={handleAddWarehouse}
+          />
         </main>
       </div>
     </div>
