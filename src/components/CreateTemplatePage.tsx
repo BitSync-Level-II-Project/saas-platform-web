@@ -69,6 +69,47 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
     );
   }
 
+  function deleteField(fieldId: string) {
+    setFields((currentFields) =>
+      currentFields.filter((field) => field.id !== fieldId),
+    );
+
+    setSelectedFieldId((currentId) =>
+      currentId === fieldId ? null : currentId,
+    );
+  }
+
+  function moveField(fieldId: string, direction: "up" | "down") {
+    setFields((currentFields) => {
+      const currentIndex = currentFields.findIndex(
+        (field) => field.id === fieldId,
+      );
+
+      if (currentIndex === -1) {
+        return currentFields;
+      }
+
+      const targetIndex =
+        direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+      if (targetIndex < 0 || targetIndex >= currentFields.length) {
+        return currentFields;
+      }
+
+      const reorderedFields = [...currentFields];
+
+      const [movedField] = reorderedFields.splice(currentIndex, 1);
+
+      if (!movedField) {
+        return currentFields;
+      }
+
+      reorderedFields.splice(targetIndex, 0, movedField);
+
+      return reorderedFields;
+    });
+  }
+
   const selectedField = fields.find((field) => field.id === selectedFieldId);
 
   return (
@@ -171,6 +212,8 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
           fields={fields}
           selectedFieldId={selectedFieldId}
           onSelectField={setSelectedFieldId}
+          onDeleteField={deleteField}
+          onMoveField={moveField}
         />
 
         <FieldSettingsPanel field={selectedField} onUpdateField={updateField} />

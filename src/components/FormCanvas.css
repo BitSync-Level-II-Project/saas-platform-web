@@ -173,3 +173,49 @@
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
+
+.form-canvas__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.form-canvas__actions > button {
+  padding: 7px 10px;
+  color: #59627b;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.form-canvas__actions > button:hover:not(:disabled) {
+  color: #4f46e5;
+  background: #f5f4ff;
+  border-color: #a5a0f3;
+}
+
+.form-canvas__actions > button:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 3px;
+}
+
+.form-canvas__actions > button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.form-canvas__actions > .form-canvas__delete {
+  margin-left: auto;
+  color: #b42318;
+}
+
+.form-canvas__actions > .form-canvas__delete:hover {
+  color: #b42318;
+  background: #fff1f0;
+  border-color: #f5b8b3;
+}

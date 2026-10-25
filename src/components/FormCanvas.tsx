@@ -1,11 +1,13 @@
-import type { FieldType, TemplateField } from "./templateTypes";
+import type { TemplateField } from "./templateTypes";
 
 import "./FormCanvas.css";
-
 type FormCanvasProps = {
   fields: TemplateField[];
   selectedFieldId: string | null;
   onSelectField: (fieldId: string) => void;
+  onDeleteField: (fieldId: string) => void;
+
+  onMoveField: (fieldId: string, direction: "up" | "down") => void;
 };
 
 function FieldPreview({ field }: { field: TemplateField }) {
@@ -89,6 +91,8 @@ export function FormCanvas({
   fields,
   selectedFieldId,
   onSelectField,
+  onDeleteField,
+  onMoveField,
 }: FormCanvasProps) {
   return (
     <section className="form-canvas" aria-labelledby="form-fields-title">
@@ -141,6 +145,35 @@ export function FormCanvas({
                     <FieldPreview field={field} />{" "}
                   </span>
                 </button>
+
+                <div className="form-canvas__actions">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    aria-label={`Move ${field.label || "field"} up`}
+                    onClick={() => onMoveField(field.id, "up")}
+                  >
+                    ↑ Move up
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={index === fields.length - 1}
+                    aria-label={`Move ${field.label || "field"} down`}
+                    onClick={() => onMoveField(field.id, "down")}
+                  >
+                    ↓ Move down
+                  </button>
+
+                  <button
+                    type="button"
+                    className="form-canvas__delete"
+                    aria-label={`Delete ${field.label || "field"}`}
+                    onClick={() => onDeleteField(field.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             );
           })}
