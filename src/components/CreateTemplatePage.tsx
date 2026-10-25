@@ -5,30 +5,30 @@ import type {
   FieldType,
   TemplateField,
   FieldSettingsUpdate,
+  TemplateDetails,
 } from "./templateTypes";
 import { FormCanvas } from "./FormCanvas";
 import { FieldSettingsPanel } from "./FieldSettingsPanel";
-
-type TemplateDetails = {
-  name: string;
-  industry: string;
-  process: string;
-  warehouse: string;
-  description: string;
-};
+import { TemplatePreviewModal } from "./TemplatePreviewModal";
+import { loadTemplateDraft, saveTemplateDraft } from "./templateDraftStorage";
 
 type CreateTemplatePageProps = {
   onBack: () => void;
 };
 
 export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
-  const [details, setDetails] = useState<TemplateDetails>({
-    name: "",
-    industry: "",
-    process: "",
-    warehouse: "",
-    description: "",
-  });
+  const [initialDraft] = useState(loadTemplateDraft);
+
+  const [details, setDetails] = useState<TemplateDetails>(
+    () =>
+      initialDraft?.details ?? {
+        name: "",
+        industry: "",
+        process: "",
+        warehouse: "",
+        description: "",
+      },
+  );
 
   function updateDetail(field: keyof TemplateDetails, value: string) {
     setDetails((current) => ({
@@ -37,9 +37,16 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
     }));
   }
 
-  const [fields, setFields] = useState<TemplateField[]>([]);
+  const [fields, setFields] = useState<TemplateField[]>(
+    () => initialDraft?.fields ?? [],
+  );
+
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   function addField(type: FieldType, label: string) {
     const newField: TemplateField = {
@@ -112,6 +119,33 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
 
   const selectedField = fields.find((field) => field.id === selectedFieldId);
 
+  function handleSaveDraft() {
+    setSaveMessage("");
+    setSaveError("");
+
+    if (details.name.trim() === "") {
+      setSaveError("Enter a template name before saving your draft.");
+      return;
+    }
+
+    try {
+      saveTemplateDraft({
+        schemaVersion: 1,
+        details: {
+          ...details,
+          name: details.name.trim(),
+        },
+        fields,
+        savedAt: new Date().toISOString(),
+      });
+
+      setSaveMessage(
+        "Draft saved in this browser. Save again after making changes.",
+      );
+    } catch {
+      setSaveError("Your draft could not be saved. Please try again.");
+    }
+  }
   return (
     <section className="template-builder">
       <button className="template-builder__back" type="button" onClick={onBack}>
@@ -119,13 +153,44 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
       </button>
 
       <div className="template-builder__heading">
-        <h1>Create Template</h1>
+        <h1>Create template</h1>
+
         <span className="template-builder__draft">Draft</span>
+
+        <div className="template-builder__actions">
+          <button
+            type="button"
+            className="template-builder__save-button"
+            onClick={handleSaveDraft}
+          >
+            Save draft
+          </button>
+
+          <button
+            type="button"
+            className="template-builder__preview-button"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            Preview
+          </button>
+        </div>
       </div>
 
       <p className="template-builder__subtitle">
         Build a reusable form for receiving, storage, picking or dispatch.
       </p>
+
+      {saveMessage && (
+        <p className="template-builder__save-success" role="status">
+          {saveMessage}
+        </p>
+      )}
+
+      {saveError && (
+        <p className="template-builder__save-error" role="alert">
+          {saveError}
+        </p>
+      )}
 
       <section
         className="template-builder__details"
@@ -218,6 +283,15 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
 
         <FieldSettingsPanel field={selectedField} onUpdateField={updateField} />
       </div>
+
+      {isPreviewOpen && (
+        <TemplatePreviewModal
+          title={details.name}
+          description={details.description}
+          fields={fields}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      )}
     </section>
   );
 }

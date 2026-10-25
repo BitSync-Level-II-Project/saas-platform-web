@@ -26,3 +26,18 @@ export type FieldSettingsUpdate = {
   min?: number | null
   max?: number | null
 }
+
+export type TemplateDetails = {
+  name: string
+  industry: string
+  process: string
+  warehouse: string
+  description: string
+}
+
+export type TemplateDraft = {
+  schemaVersion: 1
+  details: TemplateDetails
+  fields: TemplateField[]
+  savedAt: string
+}
