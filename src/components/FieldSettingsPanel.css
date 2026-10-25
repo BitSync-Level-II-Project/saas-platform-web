@@ -95,3 +95,34 @@
   accent-color: #4f46e5;
   cursor: pointer;
 }
+.field-settings__control > textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  color: #20223d;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.field-settings__control > textarea:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 3px;
+}
+
+.field-settings__number-settings {
+  margin-top: 24px;
+  border-top: 1px solid #e8ebf3;
+}
+
+.field-settings__error {
+  margin: 12px 0 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.6;
+}

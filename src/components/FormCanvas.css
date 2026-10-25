@@ -160,3 +160,16 @@
   border-radius: 6px;
   font-size: 12px;
 }
+
+.form-canvas__number-preview {
+  display: block;
+}
+
+.form-canvas__preview-note {
+  display: block;
+  margin-top: 8px;
+  color: #727b95;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}

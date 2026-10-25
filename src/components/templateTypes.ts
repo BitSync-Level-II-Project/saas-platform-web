@@ -14,9 +14,15 @@ export type TemplateField = {
   type: FieldType
   label: string
   required: boolean
+  options?: string[]
+  min?: number | null
+  max?: number | null
 }
 
 export type FieldSettingsUpdate = {
   label?: string
   required?: boolean
+  options?: string[]
+  min?: number | null
+  max?: number | null
 }
