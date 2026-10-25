@@ -1,0 +1,157 @@
+import type {
+  FieldType,
+  TemplateField,
+} from './templateTypes'
+
+import './FormCanvas.css'
+
+type FormCanvasProps = {
+  fields: TemplateField[]
+  selectedFieldId: string | null
+  onSelectField: (fieldId: string) => void
+}
+
+function FieldPreview({ type }: { type: FieldType }) {
+  switch (type) {
+    case 'short-text':
+      return (
+        <span className="form-canvas__preview">
+          Enter text
+        </span>
+      )
+
+    case 'long-text':
+      return (
+        <span className="form-canvas__preview form-canvas__preview--long">
+          Enter a detailed response
+        </span>
+      )
+
+    case 'number':
+      return (
+        <span className="form-canvas__preview">
+          Enter a number
+        </span>
+      )
+
+    case 'dropdown':
+      return (
+        <span className="form-canvas__preview form-canvas__preview--between">
+          <span>Select an option</span>
+          <span>⌄</span>
+        </span>
+      )
+
+    case 'yes-no':
+      return (
+        <span className="form-canvas__choices">
+          <span>Yes</span>
+          <span>No</span>
+        </span>
+      )
+
+    case 'date-time':
+      return (
+        <span className="form-canvas__preview">
+          Select date and time
+        </span>
+      )
+
+    case 'photo':
+      return (
+        <span className="form-canvas__preview form-canvas__preview--capture">
+          + Add photo
+        </span>
+      )
+
+    case 'barcode':
+      return (
+        <span className="form-canvas__preview form-canvas__preview--capture">
+          Scan QR / barcode
+        </span>
+      )
+
+    case 'location':
+      return (
+        <span className="form-canvas__preview form-canvas__preview--capture">
+          Capture location
+        </span>
+      )
+  }
+}
+
+export function FormCanvas({
+  fields,
+  selectedFieldId,
+  onSelectField,
+}: FormCanvasProps) {
+  return (
+    <section
+      className="form-canvas"
+      aria-labelledby="form-fields-title"
+    >
+      <div className="form-canvas__heading">
+        <h2 id="form-fields-title">Form fields</h2>
+
+        <span aria-live="polite">
+          {fields.length}{' '}
+          {fields.length === 1 ? 'field' : 'fields'}
+        </span>
+      </div>
+
+      <p className="form-canvas__description">
+        Select a field to configure its properties.
+      </p>
+
+      {fields.length === 0 ? (
+        <div className="form-canvas__empty">
+          <h3>Start building your form</h3>
+          <p>Choose a field type from the toolbox.</p>
+        </div>
+      ) : (
+        <ol className="form-canvas__list">
+          {fields.map((field, index) => {
+            const isSelected =
+              field.id === selectedFieldId
+
+            return (
+              <li key={field.id}>
+                <button
+                  type="button"
+                  className={
+                    isSelected
+                      ? 'form-canvas__card form-canvas__card--selected'
+                      : 'form-canvas__card'
+                  }
+                  aria-pressed={isSelected}
+                  aria-label={`Select ${field.label}, field ${index + 1}`}
+                  onClick={() => onSelectField(field.id)}
+                >
+                  <span className="form-canvas__card-heading">
+                    <span className="form-canvas__number">
+                      {index + 1}
+                    </span>
+
+                    <span className="form-canvas__label">
+                      {field.label}
+                    </span>
+
+                    <span className="form-canvas__requirement">
+                      {field.required
+                        ? 'Required'
+                        : 'Optional'}
+                    </span>
+                  </span>
+
+                  <span aria-hidden="true">
+                    <FieldPreview type={field.type} />
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+    </section>
+  )
+}

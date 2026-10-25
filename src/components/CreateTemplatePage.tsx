@@ -1,46 +1,79 @@
-import { useState } from 'react'
-import './CreateTemplatePage.css'
+import { useState } from "react";
+import "./CreateTemplatePage.css";
+import { FieldToolbox } from "./FieldToolbox";
+import type {
+  FieldType,
+  TemplateField,
+  FieldSettingsUpdate,
+} from "./templateTypes";
+import { FormCanvas } from "./FormCanvas";
+import { FieldSettingsPanel } from "./FieldSettingsPanel";
 
 type TemplateDetails = {
-  name: string
-  industry: string
-  process: string
-  warehouse: string
-  description: string
-}
+  name: string;
+  industry: string;
+  process: string;
+  warehouse: string;
+  description: string;
+};
 
 type CreateTemplatePageProps = {
-  onBack: () => void
-}
+  onBack: () => void;
+};
 
-export function CreateTemplatePage({
-  onBack,
-}: CreateTemplatePageProps) {
+export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
   const [details, setDetails] = useState<TemplateDetails>({
-    name: '',
-    industry: '',
-    process: '',
-    warehouse: '',
-    description: '',
-  })
+    name: "",
+    industry: "",
+    process: "",
+    warehouse: "",
+    description: "",
+  });
 
-  function updateDetail(
-    field: keyof TemplateDetails,
-    value: string,
-  ) {
+  function updateDetail(field: keyof TemplateDetails, value: string) {
     setDetails((current) => ({
       ...current,
       [field]: value,
-    }))
+    }));
   }
+
+  const [fields, setFields] = useState<TemplateField[]>([]);
+
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+
+  function addField(type: FieldType, label: string) {
+    const newField: TemplateField = {
+      id: crypto.randomUUID(),
+      type,
+      label,
+      required: false,
+    };
+
+    setFields((currentFields) => [...currentFields, newField]);
+
+    setSelectedFieldId(newField.id);
+  }
+
+  function updateField(fieldId: string, updates: FieldSettingsUpdate) {
+    setFields((currentFields) =>
+      currentFields.map((field) => {
+        if (field.id === fieldId) {
+          return {
+            ...field,
+            ...updates,
+          };
+        }
+
+        return field;
+      }),
+    );
+  }
+
+  const selectedField = fields.find((field) => field.id === selectedFieldId);
 
   return (
     <section className="template-builder">
-      <button
-        className="template-builder__back"
-        type="button"
-        onClick={onBack}
-      >
+      <button className="template-builder__back" type="button" onClick={onBack}>
         ← Templates
       </button>
 
@@ -50,8 +83,7 @@ export function CreateTemplatePage({
       </div>
 
       <p className="template-builder__subtitle">
-        Build a reusable form for receiving, storage,
-        picking or dispatch.
+        Build a reusable form for receiving, storage, picking or dispatch.
       </p>
 
       <section
@@ -66,7 +98,7 @@ export function CreateTemplatePage({
             <input
               value={details.name}
               onChange={(event) =>
-                updateDetail('name', event.currentTarget.value)
+                updateDetail("name", event.currentTarget.value)
               }
               placeholder="e.g. Goods Receiving Inspection"
               required
@@ -78,10 +110,10 @@ export function CreateTemplatePage({
             <select
               value={details.industry}
               onChange={(event) =>
-                updateDetail('industry', event.currentTarget.value)
+                updateDetail("industry", event.currentTarget.value)
               }
             >
-              <option value="">Select industry</option>
+              <option value="">Select Industry</option>
               <option value="warehouse">Warehouse</option>
               <option value="manufacturing">Manufacturing</option>
               <option value="logistics">Logistics</option>
@@ -93,7 +125,7 @@ export function CreateTemplatePage({
             <select
               value={details.process}
               onChange={(event) =>
-                updateDetail('process', event.currentTarget.value)
+                updateDetail("process", event.currentTarget.value)
               }
             >
               <option value="">Select process</option>
@@ -109,7 +141,7 @@ export function CreateTemplatePage({
             <select
               value={details.warehouse}
               onChange={(event) =>
-                updateDetail('warehouse', event.currentTarget.value)
+                updateDetail("warehouse", event.currentTarget.value)
               }
             >
               <option value="">Select warehouse</option>
@@ -124,10 +156,7 @@ export function CreateTemplatePage({
             <textarea
               value={details.description}
               onChange={(event) =>
-                updateDetail(
-                  'description',
-                  event.currentTarget.value,
-                )
+                updateDetail("description", event.currentTarget.value)
               }
               placeholder="Describe what this form collects."
               rows={3}
@@ -135,6 +164,17 @@ export function CreateTemplatePage({
           </label>
         </div>
       </section>
+      <div className="template-builder__workspace">
+        <FieldToolbox onAddField={addField} />
+
+        <FormCanvas
+          fields={fields}
+          selectedFieldId={selectedFieldId}
+          onSelectField={setSelectedFieldId}
+        />
+
+        <FieldSettingsPanel field={selectedField} onUpdateField={updateField} />
+      </div>
     </section>
-  )
+  );
 }

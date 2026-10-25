@@ -1,0 +1,97 @@
+.field-settings {
+  min-width: 0;
+  padding: 20px;
+  color: #20223d;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 10px;
+}
+
+.field-settings h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.field-settings__description,
+.field-settings__empty {
+  margin: 8px 0 0;
+  color: #727b95;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.field-settings__empty {
+  padding: 24px 0;
+}
+
+.field-settings__control {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.field-settings__control > label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field-settings__control > input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  color: #20223d;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.field-settings__control > p {
+  margin: 0;
+  color: #727b95;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.field-settings__control > input:focus-visible,
+.field-settings__required > input:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 3px;
+}
+
+.field-settings__required {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e8ebf3;
+  cursor: pointer;
+}
+
+.field-settings__required-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field-settings__required-help {
+  display: block;
+  margin-top: 6px;
+  color: #727b95;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.field-settings__required > input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #4f46e5;
+  cursor: pointer;
+}

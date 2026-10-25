@@ -1,0 +1,162 @@
+.form-canvas {
+  min-width: 0;
+  min-height: 500px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 10px;
+}
+
+.form-canvas__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.form-canvas__heading h2 {
+  margin: 0;
+  color: #20223d;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.form-canvas__heading > span,
+.form-canvas__description {
+  color: #727b95;
+  font-size: 12px;
+}
+
+.form-canvas__description {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+.form-canvas__empty {
+  padding: 64px 16px;
+  text-align: center;
+}
+
+.form-canvas__empty h3 {
+  margin: 0;
+  color: #20223d;
+  font-size: 15px;
+}
+
+.form-canvas__empty p {
+  color: #727b95;
+  font-size: 13px;
+}
+
+.form-canvas__list {
+  display: grid;
+  gap: 14px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.form-canvas__card {
+  display: block;
+  width: 100%;
+  padding: 20px;
+  color: #20223d;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 8px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.form-canvas__card:hover {
+  border-color: #a5a0f3;
+}
+
+.form-canvas__card--selected {
+  background: #faf9ff;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+
+.form-canvas__card:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 4px;
+}
+
+.form-canvas__card-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.form-canvas__number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: #4f46e5;
+  background: #eeecff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-canvas__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.form-canvas__requirement {
+  color: #727b95;
+  font-size: 11px;
+}
+
+.form-canvas__preview {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 12px;
+  color: #727b95;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.form-canvas__preview--long {
+  align-items: flex-start;
+  min-height: 88px;
+}
+
+.form-canvas__preview--between {
+  justify-content: space-between;
+}
+
+.form-canvas__preview--capture {
+  justify-content: center;
+  min-height: 68px;
+  color: #4f46e5;
+  border-style: dashed;
+}
+
+.form-canvas__choices {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.form-canvas__choices > span {
+  padding: 10px 28px;
+  color: #727b95;
+  background: #fff;
+  border: 1px solid #dce1ed;
+  border-radius: 6px;
+  font-size: 12px;
+}
