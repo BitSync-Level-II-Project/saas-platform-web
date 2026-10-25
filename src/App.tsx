@@ -4,36 +4,14 @@ import Topbar from './components/Topbar';
 import WarehouseFilters from './components/WarehouseFilters';
 import WarehouseTable from './components/WarehouseTable';
 import AddWarehouseModal from './components/AddWarehouseModal';
+import { warehouseService } from './services/warehouseService';
 import type { Warehouse } from './types';
 
 export default function App() {
-  // 1. Initial 3 warehouses
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([
-    {
-      id: '1',
-      name: 'Colombo warehouse',
-      city: 'Colombo, Sri Lanka',
-      locations: 4,
-      supervisor: 'Malith Senanayake',
-      status: 'Active',
-    },
-    {
-      id: '2',
-      name: 'Galle warehouse',
-      city: 'Galle, Sri Lanka',
-      locations: 3,
-      supervisor: 'Tharushi Perera',
-      status: 'Active',
-    },
-    {
-      id: '3',
-      name: 'Katunayake warehouse',
-      city: 'Katunayake, Sri Lanka',
-      locations: 5,
-      supervisor: 'Ruwan Silva',
-      status: 'Active',
-    },
-  ]);
+  // 1. Load warehouses from our persistent warehouseService
+  const [warehouses, setWarehouses] = useState<Warehouse[]>(() =>
+    warehouseService.getWarehouses()
+  );
 
   // 2. Search and Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +20,7 @@ export default function App() {
   // 3. Modal open/close state
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 4. Function to add a new warehouse to the list
+  // 4. Function to add a new warehouse and save to storage
   const handleAddWarehouse = (newWarehouseData: {
     name: string;
     city: string;
@@ -61,8 +39,9 @@ export default function App() {
       status: 'Active',
     };
 
-    // Add new warehouse to top of list
-    setWarehouses((prev) => [newEntry, ...prev]);
+    // Save permanently via warehouseService
+    const updatedList = warehouseService.addWarehouse(newEntry);
+    setWarehouses(updatedList);
   };
 
   // 5. Filter list dynamically based on search & status
