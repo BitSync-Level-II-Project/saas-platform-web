@@ -362,3 +362,15 @@ body {
     margin-left: 0;
   }
 }
+
+.text-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.template-table td.template-table__empty {
+  padding: 48px 20px;
+  color: #727b95;
+  font-size: 13px;
+  text-align: center;
+}

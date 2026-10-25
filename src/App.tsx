@@ -14,8 +14,11 @@ import type { Template } from "./components/TemplateTable";
 import { useState } from "react";
 import { CreateTemplatePage } from "./components/CreateTemplatePage";
 import siteTraceLogo from "./assets/SiteTrace-logo.svg";
+import { loadSavedDrafts } from "./components/templateDraftStorage";
 
-const templates: Template[] = [
+import type { SavedTemplateDraft } from "./components/templateTypes";
+
+const sampleTemplates: Template[] = [
   {
     id: "equipment-inspection",
     name: "Equipment inspection",
@@ -54,6 +57,72 @@ const menuItems = [
 
 function App() {
   const [page, setPage] = useState<"list" | "create">("list");
+
+  const [searchText, setSearchText] = useState("");
+
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "published" | "draft"
+  >("all");
+
+  const [drafts, setDrafts] = useState<SavedTemplateDraft[]>(loadSavedDrafts);
+
+  const [selectedDraft, setSelectedDraft] = useState<SavedTemplateDraft | null>(
+    null,
+  );
+
+  function openNewTemplate() {
+    setSelectedDraft(null);
+    setPage("create");
+  }
+
+  function continueDraft(draftId: string) {
+    const draft = drafts.find((item) => item.id === draftId);
+
+    if (!draft) {
+      return;
+    }
+
+    setSelectedDraft(draft);
+    setPage("create");
+  }
+
+  function handleDraftSaved() {
+    setDrafts(loadSavedDrafts());
+    setSelectedDraft(null);
+    setPage("list");
+  }
+  const warehouseLabels: Record<string, string> = {
+    all: "All warehouses",
+    colombo: "Colombo warehouse",
+    galle: "Galle warehouse",
+  };
+
+  const draftRows: Template[] = drafts.map((draft) => ({
+    id: draft.id,
+    name: draft.details.name,
+    updated: new Date(draft.savedAt).toLocaleString(),
+    warehouse:
+      warehouseLabels[draft.details.warehouse] ??
+      (draft.details.warehouse || "Not selected"),
+    fields: draft.fields.length,
+    status: "draft",
+    canContinue: true,
+  }));
+
+  const templates: Template[] = [...draftRows, ...sampleTemplates];
+
+  const normalizedSearch = searchText.trim().toLowerCase();
+
+  const filteredTemplates = templates.filter((template) => {
+    const matchesSearch =
+      template.name.toLowerCase().includes(normalizedSearch) ||
+      template.warehouse.toLowerCase().includes(normalizedSearch);
+
+    const matchesStatus =
+      statusFilter === "all" || template.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
   return (
     <div className="manager-layout">
       <aside className="sidebar">
@@ -126,9 +195,26 @@ function App() {
                   type="search"
                   placeholder="Search templates"
                   aria-label="Search templates"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.currentTarget.value)}
                 />
 
-                <select className="status-select" aria-label="Filter by status">
+                <select
+                  className="status-select"
+                  aria-label="Filter by status"
+                  value={statusFilter}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+
+                    if (
+                      value === "all" ||
+                      value === "published" ||
+                      value === "draft"
+                    ) {
+                      setStatusFilter(value);
+                    }
+                  }}
+                >
                   <option value="all">All statuses</option>
                   <option value="published">Published</option>
                   <option value="draft">Draft</option>
@@ -137,16 +223,23 @@ function App() {
                 <button
                   className="create-button"
                   type="button"
-                  onClick={() => setPage("create")}
+                  onClick={openNewTemplate}
                 >
                   Create template
                 </button>
               </div>
-
-              <TemplateTable templates={templates} />
+              <TemplateTable
+                templates={filteredTemplates}
+                onContinue={continueDraft}
+              />
             </>
           ) : (
-            <CreateTemplatePage onBack={() => setPage("list")} />
+            <CreateTemplatePage
+              key={selectedDraft?.id ?? "new-template"}
+              initialDraft={selectedDraft}
+              onBack={() => setPage("list")}
+              onSaved={handleDraftSaved}
+            />
           )}
         </main>
       </div>

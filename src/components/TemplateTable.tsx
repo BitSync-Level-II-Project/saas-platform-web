@@ -1,17 +1,19 @@
 export type Template = {
-  id: string
-  name: string
-  updated: string
-  warehouse: string
-  fields: number
-  status: 'published' | 'draft'
-}
+  id: string;
+  name: string;
+  updated: string;
+  warehouse: string;
+  fields: number;
+  status: "published" | "draft";
+  canContinue?: boolean;
+};
 
 type TemplateTableProps = {
-  templates: Template[]
-}
+  templates: Template[];
+  onContinue: (draftId: string) => void;
+};
 
-export function TemplateTable({ templates }: TemplateTableProps) {
+export function TemplateTable({ templates, onContinue }: TemplateTableProps) {
   return (
     <div className="table-card">
       <div className="table-scroll">
@@ -37,12 +39,22 @@ export function TemplateTable({ templates }: TemplateTableProps) {
                 <td>{template.fields}</td>
                 <td>
                   <span className={`status status--${template.status}`}>
-                    {template.status === 'published' ? 'Published' : 'Draft'}
+                    {template.status === "published" ? "Published" : "Draft"}
                   </span>
                 </td>
                 <td>
-                  <button className="text-action" type="button">
-                    {template.status === 'published' ? 'Edit' : 'Continue'}
+                  <button
+                    className="text-action"
+                    type="button"
+                    disabled={!template.canContinue}
+                    title={
+                      template.canContinue
+                        ? "Continue editing this draft"
+                        : "This sample has no editable form data"
+                    }
+                    onClick={() => onContinue(template.id)}
+                  >
+                    {template.status === "published" ? "Edit" : "Continue"}
                   </button>
                 </td>
               </tr>
@@ -53,5 +65,5 @@ export function TemplateTable({ templates }: TemplateTableProps) {
 
       <div className="table-footer">{templates.length} records</div>
     </div>
-  )
+  );
 }
