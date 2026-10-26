@@ -105,8 +105,8 @@ function App() {
       warehouseLabels[draft.details.warehouse] ??
       (draft.details.warehouse || "Not selected"),
     fields: draft.fields.length,
-    status: "draft",
-    canContinue: true,
+    status: draft.status ?? "draft",
+    canContinue: draft.status !== "published",
   }));
 
   const templates: Template[] = [...draftRows, ...sampleTemplates];

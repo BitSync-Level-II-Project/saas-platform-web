@@ -418,3 +418,34 @@
   background: #edf9f0;
   border-color: #bbdfc6;
 }
+
+.template-builder__save-button {
+  color: #20223d;
+  background: #fff;
+  border-color: #dce1ed;
+}
+
+.template-builder__save-button:hover {
+  background: #f5f6fa;
+}
+
+.template-builder__publish-button {
+  padding: 11px 18px;
+  color: #fff;
+  background: #4f46e5;
+  border: 1px solid #4f46e5;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.template-builder__publish-button:hover {
+  background: #4338ca;
+}
+
+.template-builder__publish-button:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 3px;
+}

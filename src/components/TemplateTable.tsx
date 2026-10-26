@@ -50,11 +50,13 @@ export function TemplateTable({ templates, onContinue }: TemplateTableProps) {
                     title={
                       template.canContinue
                         ? "Continue editing this draft"
-                        : "This sample has no editable form data"
+                        : template.status === "published"
+                          ? "This published version is read-only"
+                          : "This sample has no editable form data"
                     }
                     onClick={() => onContinue(template.id)}
                   >
-                    {template.status === "published" ? "Edit" : "Continue"}
+                    {template.status === "published" ? "Published" : "Continue"}
                   </button>
                 </td>
               </tr>

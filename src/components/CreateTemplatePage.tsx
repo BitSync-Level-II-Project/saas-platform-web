@@ -141,6 +141,7 @@ export function CreateTemplatePage({
       saveTemplateDraft({
         id: draftId,
         schemaVersion: 1,
+        status: "draft",
         details: {
           ...details,
           name: details.name.trim(),
@@ -152,6 +153,39 @@ export function CreateTemplatePage({
       onSaved();
     } catch {
       setSaveError("Your draft could not be saved. Please try again.");
+    }
+  }
+  function handlePublish() {
+    setHasCheckedTemplate(true);
+    setSaveMessage("");
+    setSaveError("");
+
+    const errors = validateTemplate(details, fields);
+
+    if (errors.length > 0) {
+      return;
+    }
+
+    const publishedAt = new Date().toISOString();
+
+    try {
+      saveTemplateDraft({
+        id: draftId,
+        schemaVersion: 1,
+        status: "published",
+        version: 1,
+        publishedAt,
+        savedAt: publishedAt,
+        details: {
+          ...details,
+          name: details.name.trim(),
+        },
+        fields,
+      });
+
+      onSaved();
+    } catch {
+      setSaveError("The template could not be published. Please try again.");
     }
   }
   const validationErrors = validateTemplate(details, fields);
@@ -184,10 +218,10 @@ export function CreateTemplatePage({
           </button>
           <button
             type="button"
-            className="template-builder__validate-button"
-            onClick={() => setHasCheckedTemplate(true)}
+            className="template-builder__publish-button"
+            onClick={handlePublish}
           >
-            Check template
+            Publish template
           </button>
         </div>
       </div>
@@ -286,34 +320,26 @@ export function CreateTemplatePage({
           </label>
         </div>
       </section>
-      {hasCheckedTemplate && (
-        <section
-          className={
-            validationErrors.length > 0
-              ? "template-builder__validation template-builder__validation--error"
-              : "template-builder__validation template-builder__validation--success"
-          }
-          aria-labelledby="template-validation-title"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <h2 id="template-validation-title">
-            {validationErrors.length > 0
-              ? "Fix these items before publishing"
-              : "Template is ready for publishing"}
-          </h2>
+      {hasCheckedTemplate && validationErrors.length > 0 && (
+  <section
+    className="template-builder__validation template-builder__validation--error"
+    aria-labelledby="template-validation-title"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    <h2 id="template-validation-title">
+      Fix these items before publishing
+    </h2>
 
-          {validationErrors.length > 0 ? (
-            <ul>
-              {validationErrors.map((message, index) => (
-                <li key={`${index}-${message}`}>{message}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>All template checks passed. Your template is still a draft.</p>
-          )}
-        </section>
-      )}
+    <ul>
+      {validationErrors.map((message, index) => (
+        <li key={`${index}-${message}`}>
+          {message}
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
       <div className="template-builder__workspace">
         <FieldToolbox onAddField={addField} />
 

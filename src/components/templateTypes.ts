@@ -44,4 +44,7 @@ export type TemplateDraft = {
 
 export type SavedTemplateDraft = TemplateDraft & {
   id: string
+  status?: 'draft' | 'published'
+  version?: number
+  publishedAt?: string
 }

@@ -4,6 +4,7 @@ import type {
   TemplateDraft,
 } from './templateTypes'
 
+import { validateTemplate } from './validateTemplate'
 const STORAGE_KEY = 'sitetrace.template-builder.draft.v1'
 
 function isRecord(
@@ -150,10 +151,33 @@ export function saveTemplateDraft(
 ): void {
   const existingDrafts = loadSavedDrafts()
 
+  const existing = existingDrafts.find(
+    (item) => item.id === draft.id
+  )
+
+  if (existing?.status === 'published') {
+    throw new Error(
+      'Published versions cannot be overwritten.'
+    )
+  }
+
+  if (draft.status === 'published') {
+    const errors = validateTemplate(
+      draft.details,
+      draft.fields
+    )
+
+    if (errors.length > 0 || draft.version !== 1) {
+      throw new Error(
+        'The template is not ready for publishing.'
+      )
+    }
+  }
+
   const updatedDrafts = [
     draft,
     ...existingDrafts.filter(
-      (existing) => existing.id !== draft.id
+      (item) => item.id !== draft.id
     ),
   ]
 
