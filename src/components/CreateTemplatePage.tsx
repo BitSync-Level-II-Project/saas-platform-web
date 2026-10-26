@@ -1,23 +1,31 @@
 import { useState } from "react";
 import "./CreateTemplatePage.css";
 import { FieldToolbox } from "./FieldToolbox";
+import { validateTemplate } from "./validateTemplate";
+
 import type {
   FieldType,
   TemplateField,
   FieldSettingsUpdate,
   TemplateDetails,
+  SavedTemplateDraft,
 } from "./templateTypes";
 import { FormCanvas } from "./FormCanvas";
 import { FieldSettingsPanel } from "./FieldSettingsPanel";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
-import { loadTemplateDraft, saveTemplateDraft } from "./templateDraftStorage";
+import { saveTemplateDraft } from "./templateDraftStorage";
 
 type CreateTemplatePageProps = {
   onBack: () => void;
+  initialDraft: SavedTemplateDraft | null;
+  onSaved: () => void;
 };
-
-export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
-  const [initialDraft] = useState(loadTemplateDraft);
+export function CreateTemplatePage({
+  onBack,
+  initialDraft,
+  onSaved,
+}: CreateTemplatePageProps) {
+  const [draftId] = useState(() => initialDraft?.id ?? crypto.randomUUID());
 
   const [details, setDetails] = useState<TemplateDetails>(
     () =>
@@ -43,6 +51,7 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
 
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [hasCheckedTemplate, setHasCheckedTemplate] = useState(false);
 
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
 
@@ -130,6 +139,7 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
 
     try {
       saveTemplateDraft({
+        id: draftId,
         schemaVersion: 1,
         details: {
           ...details,
@@ -139,13 +149,12 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
         savedAt: new Date().toISOString(),
       });
 
-      setSaveMessage(
-        "Draft saved in this browser. Save again after making changes.",
-      );
+      onSaved();
     } catch {
       setSaveError("Your draft could not be saved. Please try again.");
     }
   }
+  const validationErrors = validateTemplate(details, fields);
   return (
     <section className="template-builder">
       <button className="template-builder__back" type="button" onClick={onBack}>
@@ -172,6 +181,13 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
             onClick={() => setIsPreviewOpen(true)}
           >
             Preview
+          </button>
+          <button
+            type="button"
+            className="template-builder__validate-button"
+            onClick={() => setHasCheckedTemplate(true)}
+          >
+            Check template
           </button>
         </div>
       </div>
@@ -270,6 +286,34 @@ export function CreateTemplatePage({ onBack }: CreateTemplatePageProps) {
           </label>
         </div>
       </section>
+      {hasCheckedTemplate && (
+        <section
+          className={
+            validationErrors.length > 0
+              ? "template-builder__validation template-builder__validation--error"
+              : "template-builder__validation template-builder__validation--success"
+          }
+          aria-labelledby="template-validation-title"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <h2 id="template-validation-title">
+            {validationErrors.length > 0
+              ? "Fix these items before publishing"
+              : "Template is ready for publishing"}
+          </h2>
+
+          {validationErrors.length > 0 ? (
+            <ul>
+              {validationErrors.map((message, index) => (
+                <li key={`${index}-${message}`}>{message}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>All template checks passed. Your template is still a draft.</p>
+          )}
+        </section>
+      )}
       <div className="template-builder__workspace">
         <FieldToolbox onAddField={addField} />
 

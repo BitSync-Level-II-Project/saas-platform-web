@@ -357,3 +357,64 @@
   outline: 2px solid #4f46e5;
   outline-offset: 3px;
 }
+
+.template-builder__validate-button {
+  padding: 11px 18px;
+  color: #4f46e5;
+  background: #eeecff;
+  border: 1px solid #d8d4ff;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.template-builder__validate-button:hover {
+  background: #e4e0ff;
+}
+
+.template-builder__validate-button:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 3px;
+}
+
+.template-builder__validation {
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border: 1px solid;
+  border-radius: 8px;
+}
+
+.template-builder__validation h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.template-builder__validation ul {
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
+.template-builder__validation li,
+.template-builder__validation p {
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.template-builder__validation p {
+  margin: 8px 0 0;
+}
+
+.template-builder__validation--error {
+  color: #b42318;
+  background: #fff7f5;
+  border-color: #f5c9c2;
+}
+
+.template-builder__validation--success {
+  color: #166534;
+  background: #edf9f0;
+  border-color: #bbdfc6;
+}

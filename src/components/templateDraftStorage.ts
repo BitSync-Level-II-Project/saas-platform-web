@@ -1,4 +1,8 @@
-import type { TemplateDraft } from './templateTypes'
+
+import type {
+  SavedTemplateDraft,
+  TemplateDraft,
+} from './templateTypes'
 
 const STORAGE_KEY = 'sitetrace.template-builder.draft.v1'
 
@@ -89,6 +93,14 @@ function isDraft(value: unknown): value is TemplateDraft {
   return validFields && new Set(ids).size === ids.length
 }
 
+function isSavedDraft(value: unknown): value is SavedTemplateDraft {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    isDraft(value)
+  )
+}
+
 export function loadTemplateDraft(): TemplateDraft | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
@@ -105,11 +117,48 @@ export function loadTemplateDraft(): TemplateDraft | null {
   }
 }
 
+
+
+const DRAFTS_KEY = 'sitetrace.template-builder.drafts.v1'
+
+export function loadSavedDrafts(): SavedTemplateDraft[] {
+  try {
+    const stored = localStorage.getItem(DRAFTS_KEY)
+
+    if (stored === null) {
+      const previousDraft = loadTemplateDraft()
+
+      return previousDraft
+        ? [{ ...previousDraft, id: 'imported-current-draft' }]
+        : []
+    }
+
+    const parsed: unknown = JSON.parse(stored)
+
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed.filter(isSavedDraft)
+  } catch {
+    return []
+  }
+}
+
 export function saveTemplateDraft(
-  draft: TemplateDraft
+  draft: SavedTemplateDraft
 ): void {
+  const existingDrafts = loadSavedDrafts()
+
+  const updatedDrafts = [
+    draft,
+    ...existingDrafts.filter(
+      (existing) => existing.id !== draft.id
+    ),
+  ]
+
   localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(draft)
+    DRAFTS_KEY,
+    JSON.stringify(updatedDrafts)
   )
 }

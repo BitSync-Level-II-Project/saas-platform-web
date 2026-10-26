@@ -41,3 +41,7 @@ export type TemplateDraft = {
   fields: TemplateField[]
   savedAt: string
 }
+
+export type SavedTemplateDraft = TemplateDraft & {
+  id: string
+}
