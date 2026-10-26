@@ -8,6 +8,7 @@ type TemplatePreviewModalProps = {
   description: string;
   fields: TemplateField[];
   onClose: () => void;
+  readOnly?: boolean;
 };
 
 function PreviewControl({ field }: { field: TemplateField }) {
@@ -120,6 +121,7 @@ export function TemplatePreviewModal({
   description,
   fields,
   onClose,
+  readOnly = false,
 }: TemplatePreviewModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isTestPassed, setIsTestPassed] = useState(false);
@@ -162,7 +164,9 @@ export function TemplatePreviewModal({
     >
       <div className="template-preview__header">
         <div>
-          <span className="template-preview__badge">Preview</span>
+          <span className="template-preview__badge">
+            {readOnly ? "Published template" : "Preview"}
+          </span>
 
           <h2 id="template-preview-title">
             {title.trim() || "Untitled template"}
@@ -180,7 +184,9 @@ export function TemplatePreviewModal({
       </div>
 
       <p id="template-preview-notice" className="template-preview__notice">
-        Test your form. Responses entered here are not saved.
+        {readOnly
+          ? "Read-only view of this published template."
+          : "Test your form. Responses entered here are not saved."}
       </p>
 
       {description.trim() && (
@@ -199,14 +205,18 @@ export function TemplatePreviewModal({
         onSubmit={(event) => {
           event.preventDefault();
 
-          if (fields.length === 0 || hasInvalidConfiguration) {
+          if (readOnly || fields.length === 0 || hasInvalidConfiguration) {
             return;
           }
 
           setIsTestPassed(true);
         }}
       >
-        <div className="template-preview__fields">
+        <fieldset
+          className="template-preview__fields"
+          disabled={readOnly}
+          aria-label="Template fields"
+        >
           {fields.length === 0 ? (
             <p className="template-preview__empty">
               No fields yet. Add fields in the builder.
@@ -223,9 +233,9 @@ export function TemplatePreviewModal({
               </div>
             ))
           )}
-        </div>
+        </fieldset>
 
-        {isTestPassed && (
+        {!readOnly && isTestPassed && (
           <p className="template-preview__success" role="status">
             Preview check passed. No responses were saved.
           </p>
@@ -237,16 +247,18 @@ export function TemplatePreviewModal({
             className="template-preview__secondary"
             onClick={onClose}
           >
-            Back to builder
+            {readOnly ? "Close" : "Back to builder"}{" "}
           </button>
 
-          <button
-            type="submit"
-            className="template-preview__primary"
-            disabled={fields.length === 0 || hasInvalidConfiguration}
-          >
-            Test form
-          </button>
+          {!readOnly && (
+            <button
+              type="submit"
+              className="template-preview__primary"
+              disabled={fields.length === 0 || hasInvalidConfiguration}
+            >
+              Test form
+            </button>
+          )}
         </div>
       </form>
     </dialog>

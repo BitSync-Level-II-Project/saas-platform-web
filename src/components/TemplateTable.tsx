@@ -6,14 +6,20 @@ export type Template = {
   fields: number;
   status: "published" | "draft";
   canContinue?: boolean;
+  canView?: boolean;
 };
 
 type TemplateTableProps = {
   templates: Template[];
   onContinue: (draftId: string) => void;
+  onView: (templateId: string) => void;
 };
 
-export function TemplateTable({ templates, onContinue }: TemplateTableProps) {
+export function TemplateTable({
+  templates,
+  onContinue,
+  onView,
+}: TemplateTableProps) {
   return (
     <div className="table-card">
       <div className="table-scroll">
@@ -46,17 +52,23 @@ export function TemplateTable({ templates, onContinue }: TemplateTableProps) {
                   <button
                     className="text-action"
                     type="button"
-                    disabled={!template.canContinue}
+                    disabled={!template.canContinue && !template.canView}
                     title={
-                      template.canContinue
-                        ? "Continue editing this draft"
-                        : template.status === "published"
-                          ? "This published version is read-only"
+                      template.canView
+                        ? "View published template"
+                        : template.canContinue
+                          ? "Continue editing this draft"
                           : "This sample has no editable form data"
                     }
-                    onClick={() => onContinue(template.id)}
+                    onClick={() => {
+                      if (template.canView) {
+                        onView(template.id);
+                      } else if (template.canContinue) {
+                        onContinue(template.id);
+                      }
+                    }}
                   >
-                    {template.status === "published" ? "Published" : "Continue"}
+                    {template.status === "published" ? "View" : "Continue"}
                   </button>
                 </td>
               </tr>

@@ -182,3 +182,19 @@
     padding: 20px;
   }
 }
+
+fieldset.template-preview__fields {
+  min-width: 0;
+  margin: 28px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.template-preview__fields:disabled input,
+.template-preview__fields:disabled select,
+.template-preview__fields:disabled textarea {
+  color: #59627b;
+  background: #f8f9fc;
+  opacity: 1;
+  cursor: default;
+}

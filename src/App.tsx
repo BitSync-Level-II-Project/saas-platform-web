@@ -15,6 +15,7 @@ import { useState } from "react";
 import { CreateTemplatePage } from "./components/CreateTemplatePage";
 import siteTraceLogo from "./assets/SiteTrace-logo.svg";
 import { loadSavedDrafts } from "./components/templateDraftStorage";
+import { TemplatePreviewModal } from "./components/TemplatePreviewModal";
 
 import type { SavedTemplateDraft } from "./components/templateTypes";
 
@@ -69,6 +70,8 @@ function App() {
   const [selectedDraft, setSelectedDraft] = useState<SavedTemplateDraft | null>(
     null,
   );
+  const [viewedTemplate, setViewedTemplate] =
+    useState<SavedTemplateDraft | null>(null);
 
   function openNewTemplate() {
     setSelectedDraft(null);
@@ -86,6 +89,17 @@ function App() {
     setPage("create");
   }
 
+  function viewPublishedTemplate(templateId: string) {
+    const template = drafts.find(
+      (item) => item.id === templateId && item.status === "published",
+    );
+
+    if (!template) {
+      return;
+    }
+
+    setViewedTemplate(template);
+  }
   function handleDraftSaved() {
     setDrafts(loadSavedDrafts());
     setSelectedDraft(null);
@@ -107,6 +121,7 @@ function App() {
     fields: draft.fields.length,
     status: draft.status ?? "draft",
     canContinue: draft.status !== "published",
+    canView: draft.status === "published",
   }));
 
   const templates: Template[] = [...draftRows, ...sampleTemplates];
@@ -231,6 +246,7 @@ function App() {
               <TemplateTable
                 templates={filteredTemplates}
                 onContinue={continueDraft}
+                onView={viewPublishedTemplate}
               />
             </>
           ) : (
@@ -239,6 +255,17 @@ function App() {
               initialDraft={selectedDraft}
               onBack={() => setPage("list")}
               onSaved={handleDraftSaved}
+            />
+          )}
+
+          {viewedTemplate && (
+            <TemplatePreviewModal
+              key={viewedTemplate.id}
+              title={viewedTemplate.details.name}
+              description={viewedTemplate.details.description}
+              fields={viewedTemplate.fields}
+              readOnly
+              onClose={() => setViewedTemplate(null)}
             />
           )}
         </main>
