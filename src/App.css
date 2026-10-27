@@ -374,3 +374,46 @@ body {
   font-size: 13px;
   text-align: center;
 }
+
+.templates-page > p {
+  font-size: 13px;
+}
+
+.templates-page > h1 {
+  color: #20223d;
+  font-size: 30px;
+  margin: 0;
+}
+
+.templates-page .search-input,
+.templates-page .status-select,
+.templates-page .create-button {
+  font-size: 13px;
+}
+
+.templates-page .search-input,
+.templates-page .status-select {
+  height: 44px;
+}
+
+.templates-page .create-button {
+  height: 42px;
+}
+
+.templates-page .template-table {
+  font-size: 13px;
+}
+
+.templates-page .template-table th {
+  font-size: 12px;
+}
+
+.templates-page .template-table td:first-child small,
+.templates-page .status,
+.templates-page .table-footer {
+  font-size: 12px;
+}
+
+.templates-page .text-action {
+  font-size: 13px;
+}

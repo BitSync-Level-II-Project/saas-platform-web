@@ -200,8 +200,8 @@ function App() {
 
         <main className="content">
           {page === "list" ? (
-            <>
-              <h1>Templates</h1>
+            <section className="templates-page" aria-labelledby="templates-title">
+              <h1 id="templates-title">Templates</h1>
               <p>Reusable forms for your warehouses.</p>
 
               <div className="template-toolbar">
@@ -248,7 +248,7 @@ function App() {
                 onContinue={continueDraft}
                 onView={viewPublishedTemplate}
               />
-            </>
+            </section>
           ) : (
             <CreateTemplatePage
               key={selectedDraft?.id ?? "new-template"}
