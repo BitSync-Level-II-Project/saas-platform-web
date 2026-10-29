@@ -656,3 +656,122 @@ body {
 .btn-cancel:hover {
   background-color: #f8fafc;
 }
+
+
+/* ----------------- Warehouse Detail & Locations View ----------------- */
+.warehouse-detail-view {
+  width: 100%;
+}
+
+.back-link {
+  background: transparent;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s ease;
+}
+
+.back-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+
+.detail-title {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.detail-subtitle {
+  font-size: 0.925rem;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+.btn-outline {
+  height: 40px;
+  padding: 0 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-outline:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.detail-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eef2f6;
+}
+
+.detail-tabs {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.tab-item {
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.75rem 0.25rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.tab-item:hover {
+  color: #0f172a;
+}
+
+.tab-item.active {
+  color: #4f46e5;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #4f46e5;
+  border-radius: 2px;
+}
+
+.location-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.925rem;
+}
+
+.location-desc {
+  font-size: 0.775rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}

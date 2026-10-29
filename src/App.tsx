@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import WarehouseFilters from './components/WarehouseFilters';
 import WarehouseTable from './components/WarehouseTable';
+import WarehouseDetail from './components/WarehouseDetail';
 import AddWarehouseModal from './components/AddWarehouseModal';
 import { warehouseService } from './services/warehouseService';
 import type { Warehouse } from './types';
@@ -13,14 +14,17 @@ export default function App() {
     warehouseService.getWarehouses()
   );
 
-  // 2. Search and Filter states
+  // 2. Navigation state: null = list view, or Warehouse = detail/locations view
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
+
+  // 3. Search and Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  // 3. Modal open/close state
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // 4. Modal state for adding a warehouse
+  const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
 
-  // 4. Function to add a new warehouse and save to storage
+  // 5. Function to add a new warehouse and save to storage
   const handleAddWarehouse = (newWarehouseData: {
     name: string;
     city: string;
@@ -44,7 +48,7 @@ export default function App() {
     setWarehouses(updatedList);
   };
 
-  // 5. Filter list dynamically based on search & status
+  // 6. Filter list dynamically based on search & status
   const filteredWarehouses = warehouses.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,37 +63,58 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      {/* Sidebar */}
+      {/* 1. Left Sidebar */}
       <Sidebar />
 
-      {/* Main Content Area */}
+      {/* 2. Main Content Area */}
       <div className="main-wrapper">
         <Topbar />
 
         <main className="page-container">
-          <header className="page-header">
-            <h1 className="page-title">Warehouses</h1>
-            <p className="page-subtitle">Manage warehouses and their locations.</p>
-          </header>
+          {selectedWarehouse ? (
+            /* Locations View (M2-02 - Screenshot 2) */
+            <WarehouseDetail
+              warehouse={selectedWarehouse}
+              onBack={() => {
+                // Return to main list and refresh warehouses count
+                setSelectedWarehouse(null);
+                setWarehouses(warehouseService.getWarehouses());
+              }}
+              onAddLocationClick={() => {
+                alert('Add location modal will open here in Step 2!');
+              }}
+            />
+          ) : (
+            /* Main Warehouses List (M2-01) */
+            <>
+              <header className="page-header">
+                <h1 className="page-title">Warehouses</h1>
+                <p className="page-subtitle">Manage warehouses and their locations.</p>
+              </header>
 
-          {/* Filter Bar with Search, Dropdown & Add button */}
-          <WarehouseFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            onAddClick={() => setIsModalOpen(true)}
-          />
+              {/* Filter Bar with Search, Dropdown & Add button */}
+              <WarehouseFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                onAddClick={() => setIsWarehouseModalOpen(true)}
+              />
 
-          {/* Table */}
-          <WarehouseTable warehouses={filteredWarehouses} />
+              {/* Table */}
+              <WarehouseTable
+                warehouses={filteredWarehouses}
+                onOpenWarehouse={(warehouse) => setSelectedWarehouse(warehouse)}
+              />
 
-          {/* Add Warehouse Modal Dialog */}
-          <AddWarehouseModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onAddWarehouse={handleAddWarehouse}
-          />
+              {/* Add Warehouse Modal Dialog */}
+              <AddWarehouseModal
+                isOpen={isWarehouseModalOpen}
+                onClose={() => setIsWarehouseModalOpen(false)}
+                onAddWarehouse={handleAddWarehouse}
+              />
+            </>
+          )}
         </main>
       </div>
     </div>

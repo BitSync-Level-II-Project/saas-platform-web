@@ -2,9 +2,13 @@ import type { Warehouse } from '../types';
 
 interface WarehouseTableProps {
   warehouses: Warehouse[];
+  onOpenWarehouse?: (warehouse: Warehouse) => void;
 }
 
-export default function WarehouseTable({ warehouses }: WarehouseTableProps) {
+export default function WarehouseTable({
+  warehouses,
+  onOpenWarehouse,
+}: WarehouseTableProps) {
   return (
     <div className="table-container">
       <table className="warehouse-table">
@@ -52,7 +56,10 @@ export default function WarehouseTable({ warehouses }: WarehouseTableProps) {
 
                 {/* Open Action */}
                 <td className="table-td text-right">
-                  <button className="btn-open">
+                  <button
+                    className="btn-open"
+                    onClick={() => onOpenWarehouse?.(warehouse)}
+                  >
                     Open
                   </button>
                 </td>
