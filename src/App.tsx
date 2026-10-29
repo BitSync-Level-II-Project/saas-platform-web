@@ -72,16 +72,16 @@ export default function App() {
 
         <main className="page-container">
           {selectedWarehouse ? (
-            /* Locations View (M2-02 - Screenshot 2) */
+            /* Locations View (M2-02 - Screenshots 1 & 2) */
             <WarehouseDetail
               warehouse={selectedWarehouse}
               onBack={() => {
-                // Return to main list and refresh warehouses count
                 setSelectedWarehouse(null);
                 setWarehouses(warehouseService.getWarehouses());
               }}
-              onAddLocationClick={() => {
-                alert('Add location modal will open here in Step 2!');
+              onLocationAdded={() => {
+                // Keep warehouses location count in sync
+                setWarehouses(warehouseService.getWarehouses());
               }}
             />
           ) : (

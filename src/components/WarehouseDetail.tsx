@@ -1,22 +1,43 @@
 import { useState } from 'react';
 import { warehouseService } from '../services/warehouseService';
+import AddLocationModal from './AddLocationModal';
 import type { Warehouse, Location } from '../types';
 
 interface WarehouseDetailProps {
   warehouse: Warehouse;
   onBack: () => void;
-  onAddLocationClick: () => void;
+  onLocationAdded?: () => void;
 }
 
 export default function WarehouseDetail({
   warehouse,
   onBack,
-  onAddLocationClick,
+  onLocationAdded,
 }: WarehouseDetailProps) {
-  // Initialize locations directly from warehouseService
-  const [locations] = useState<Location[]>(() =>
+  // 1. Locations list for this warehouse
+  const [locations, setLocations] = useState<Location[]>(() =>
     warehouseService.getLocations(warehouse.id)
   );
+
+  // 2. State for Add Location Modal
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // 3. Handler to add a new location
+  const handleAddLocation = (data: { name: string; description?: string }) => {
+    const newLoc: Location = {
+      id: Date.now().toString(),
+      warehouseId: warehouse.id,
+      name: data.name,
+      description: data.description,
+      assignedWork: '0 tasks',
+      status: 'Active',
+    };
+
+    // Save permanently via warehouseService
+    const updated = warehouseService.addLocation(newLoc);
+    setLocations(updated);
+    onLocationAdded?.();
+  };
 
   return (
     <div className="warehouse-detail-view">
@@ -53,7 +74,7 @@ export default function WarehouseDetail({
         {/* Add Location Primary Button */}
         <button
           className="btn-primary"
-          onClick={onAddLocationClick}
+          onClick={() => setIsAddModalOpen(true)}
           type="button"
         >
           Add location
@@ -81,7 +102,7 @@ export default function WarehouseDetail({
             ) : (
               locations.map((loc) => (
                 <tr key={loc.id} className="table-row">
-                  {/* Location Name */}
+                  {/* Location Name & optional description */}
                   <td className="table-td">
                     <div className="location-name">{loc.name}</div>
                     {loc.description && (
@@ -122,6 +143,14 @@ export default function WarehouseDetail({
           {locations.length} {locations.length === 1 ? 'record' : 'records'}
         </div>
       </div>
+
+      {/* Add Location Modal */}
+      <AddLocationModal
+        isOpen={isAddModalOpen}
+        warehouse={warehouse}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddLocation={handleAddLocation}
+      />
     </div>
   );
 }
