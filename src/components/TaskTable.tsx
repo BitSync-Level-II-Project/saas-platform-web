@@ -1,45 +1,45 @@
 import type { Task } from './taskTypes';
-import { workerName } from './taskTypes';
+import { formatDue, statusClass } from './taskTypes';
 
 interface Props {
   tasks: Task[];
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onOpen: (id: string) => void;
 }
 
-export function TaskTable({ tasks, onView, onEdit, onDelete }: Props) {
-  if (tasks.length === 0) return <p className="empty-state">No tasks found.</p>;
-
+export function TaskTable({ tasks, onOpen }: Props) {
   return (
-    <table className="task-table">
-      <thead>
-        <tr>
-          <th>Task</th><th>Location</th><th>Priority</th>
-          <th>Status</th><th>Assignee</th><th>Due</th><th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {tasks.map((t) => (
-          <tr key={t.id}>
-            <td>
-              <button type="button" className="link-button" onClick={() => onView(t.id)}>
-                <strong>{t.title}</strong>
-              </button>
-              <div className="muted">{t.code}</div>
-            </td>
-            <td>{t.location}</td>
-            <td><span className={`pill priority-${t.priority.toLowerCase()}`}>{t.priority}</span></td>
-            <td><span className="pill">{t.status}</span></td>
-            <td>{workerName(t.assignee)}</td>
-            <td>{t.dueDate}</td>
-            <td>
-              <button type="button" className="link-button" onClick={() => onEdit(t.id)}>Edit</button>
-              <button type="button" className="link-button" onClick={() => onDelete(t.id)}>Archive</button>
-            </td>
+    <div className="card">
+      <table className="task-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Warehouse</th>
+            <th>Supervisor</th>
+            <th>Due</th>
+            <th>Status</th>
+            <th></th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {tasks.map((t) => (
+            <tr key={t.id}>
+              <td>
+                <div className="task-title">{t.title}</div>
+                <div className="task-code">{t.code}</div>
+              </td>
+              <td>{t.warehouse}</td>
+              <td>{t.supervisor}</td>
+              <td>{formatDue(t.dueDate)}</td>
+              <td><span className={statusClass(t.status)}>{t.status}</span></td>
+              <td>
+                <button type="button" className="link-btn" onClick={() => onOpen(t.id)}>Open</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {tasks.length === 0 && <p className="table-footer">No tasks found.</p>}
+      <p className="table-footer">{tasks.length} records</p>
+    </div>
   );
 }

@@ -1,35 +1,61 @@
-export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
-export type TaskStatus = 'Assigned' | 'In progress' | 'To review' | 'Recheck' | 'Approved';
+export type TaskStatus = 'Assigned' | 'In progress' | 'Complete';
 
 export interface Task {
   id: string;
   code: string;
   title: string;
+  warehouse: string;
   location: string;
-  priority: TaskPriority;
+  template: string;
+  supervisor: string;
+  dueDate: string; // YYYY-MM-DD
+  instructions: string;
   status: TaskStatus;
-  dueDate: string;
-  assignee: string | null; // worker id
 }
 
-export interface Worker {
-  id: string;
-  name: string;
-}
+export type NewTask = Omit<Task, 'id' | 'code' | 'status'>;
 
-export const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
+export const STATUSES: TaskStatus[] = ['Assigned', 'In progress', 'Complete'];
+export const WAREHOUSES = ['Colombo', 'Galle'];
+export const LOCATIONS = ['Machine room', 'Loading bay', 'Storage aisle'];
+export const TEMPLATES = ['Equipment inspection', 'Storage check', 'Safety walk'];
+export const SUPERVISORS = ['Malith Senanayake', 'Tharushi Perera'];
 
-export const WORKERS: Worker[] = [
-  { id: 'w1', name: 'Kavindu' },
-  { id: 'w2', name: 'Nimal' },
-  { id: 'w3', name: 'Sajith' },
-];
+const isoFromToday = (offsetDays: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+};
 
-export const workerName = (id: string | null) =>
-  WORKERS.find((w) => w.id === id)?.name ?? 'Unassigned';
+export const todayIso = () => isoFromToday(0);
+
+export const formatDue = (iso: string) => {
+  if (iso === isoFromToday(0)) return 'Today';
+  if (iso === isoFromToday(-1)) return 'Yesterday';
+  if (iso === isoFromToday(1)) return 'Tomorrow';
+  return iso;
+};
+
+export const statusClass = (s: TaskStatus) =>
+  `pill status-${s.toLowerCase().replace(' ', '-')}`;
 
 export const initialTasks: Task[] = [
-  { id: '1', code: 'TSK-1042', title: 'Morning equipment check', location: 'Machine room', priority: 'High', status: 'Assigned', dueDate: 'Today, 11:00', assignee: 'w1' },
-  { id: '2', code: 'TSK-1041', title: 'Loading bay inspection', location: 'Loading bay', priority: 'Medium', status: 'In progress', dueDate: 'Today, 14:00', assignee: 'w2' },
-  { id: '3', code: 'TSK-1039', title: 'Meter display evidence', location: 'Machine room', priority: 'Critical', status: 'Recheck', dueDate: 'Today, 15:00', assignee: null },
+  {
+    id: '1', code: 'TSK-1042', title: 'Morning equipment check',
+    warehouse: 'Colombo', location: 'Machine room', template: 'Equipment inspection',
+    supervisor: 'Malith Senanayake', dueDate: isoFromToday(0),
+    instructions: 'Read display and attach a clear photo.', status: 'In progress',
+  },
+  {
+    id: '2', code: 'TSK-1041', title: 'Loading bay inspection',
+    warehouse: 'Colombo', location: 'Loading bay', template: 'Safety walk',
+    supervisor: 'Malith Senanayake', dueDate: isoFromToday(0),
+    instructions: 'Check bay doors and floor markings.', status: 'Assigned',
+  },
+  {
+    id: '3', code: 'TSK-1038', title: 'Storage aisle check',
+    warehouse: 'Galle', location: 'Storage aisle', template: 'Storage check',
+    supervisor: 'Tharushi Perera', dueDate: isoFromToday(-1),
+    instructions: 'Count pallets in aisles A to C.', status: 'Complete',
+  },
 ];
