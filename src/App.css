@@ -469,3 +469,32 @@ body {
   font-size: 12px;
   line-height: 1.6;
 }
+
+.sidebar-nav > button.nav-item {
+  width: 100%;
+  border: 0;
+  color: #59617d;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: normal;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+
+.sidebar-nav > button.nav-item:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.sidebar-nav > button.nav-item.nav-item--active {
+  color: #4f46e5;
+  background: #ecebff;
+}
+
+.sidebar-nav > button.nav-item:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}

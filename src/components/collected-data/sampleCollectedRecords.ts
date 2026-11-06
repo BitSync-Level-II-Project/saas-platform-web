@@ -1,0 +1,48 @@
+import type {
+  CollectedRecordSummary,
+} from './collectedDataTypes'
+
+export const sampleCollectedRecords: CollectedRecordSummary[] = [
+  {
+    id: 'SUB-2081',
+    taskId: 'TSK-1042',
+    templateId: 'TMP-04',
+    templateVersion: 1,
+    templateName: 'Equipment inspection',
+    warehouse: 'Colombo warehouse',
+    location: 'Machine room',
+    submittedBy: 'Kavindu Silva',
+    source: 'worker',
+    submittedAt: '2026-11-06T09:23:00+05:30',
+    receivedAt: '2026-11-06T09:24:00+05:30',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'SUB-2080',
+    taskId: 'TSK-1041',
+    templateId: 'TMP-03',
+    templateVersion: 1,
+    templateName: 'Loading bay safety',
+    warehouse: 'Colombo warehouse',
+    location: 'Loading bay',
+    submittedBy: 'Amaya Fernando',
+    source: 'worker',
+    submittedAt: '2026-11-06T09:10:00+05:30',
+    receivedAt: '2026-11-06T09:12:00+05:30',
+    reviewStatus: 'approved',
+  },
+  {
+    id: 'SUB-2077',
+    taskId: 'TSK-1038',
+    templateId: 'TMP-02',
+    templateVersion: 1,
+    templateName: 'Stock condition',
+    warehouse: 'Galle warehouse',
+    location: 'Storage aisle A',
+    submittedBy: 'Nimal Fernando',
+    source: 'worker',
+    submittedAt: '2026-11-06T08:55:00+05:30',
+    receivedAt: '2026-11-06T08:58:00+05:30',
+    reviewStatus: 'recheck-requested',
+  },
+]

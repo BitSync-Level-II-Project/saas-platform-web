@@ -16,6 +16,8 @@ import { CreateTemplatePage } from "./components/CreateTemplatePage";
 import siteTraceLogo from "./assets/SiteTrace-logo.svg";
 import { loadSavedDrafts } from "./components/templateDraftStorage";
 import { TemplatePreviewModal } from "./components/TemplatePreviewModal";
+import { CollectedDataPage } from "./components/collected-data/CollectedDataPage";
+import { sampleCollectedRecords } from "./components/collected-data/sampleCollectedRecords";
 
 import type { SavedTemplateDraft } from "./components/templateTypes";
 
@@ -57,8 +59,8 @@ const menuItems = [
 ];
 
 function App() {
-  const [page, setPage] = useState<"list" | "create">("list");
-
+const [page, setPage] =
+  useState<"list" | "create" | "collected">("list");
   const [searchText, setSearchText] = useState("");
 
   const [statusFilter, setStatusFilter] = useState<
@@ -168,21 +170,46 @@ setDraftLoadResult(loadSavedDrafts());
 
         <nav className="sidebar-nav" aria-label="Manager navigation">
           {menuItems.map((item) => {
-            const Icon = item.icon;
+  const Icon = item.icon;
 
-            return (
-              <div
-                className={`nav-item ${
-                  item.label === "Templates" ? "nav-item--active" : ""
-                }`}
-                key={item.label}
-                aria-current={item.label === "Templates" ? "page" : undefined}
-              >
-                <Icon size={17} strokeWidth={1.8} />
-                <span>{item.label}</span>
-              </div>
-            );
-          })}
+  const targetPage =
+    item.label === "Templates"
+      ? "list"
+      : item.label === "Collected data"
+        ? "collected"
+        : null;
+
+  const isActive =
+    item.label === "Templates"
+      ? page !== "collected"
+      : item.label === "Collected data" &&
+        page === "collected";
+
+  if (targetPage) {
+    return (
+      <button
+        key={item.label}
+        type="button"
+        className={`nav-item ${
+          isActive ? "nav-item--active" : ""
+        }`}
+        aria-current={isActive ? "page" : undefined}
+        disabled={page === "create"}
+        onClick={() => setPage(targetPage)}
+      >
+        <Icon size={17} strokeWidth={1.8} />
+        <span>{item.label}</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="nav-item" key={item.label}>
+      <Icon size={17} strokeWidth={1.8} />
+      <span>{item.label}</span>
+    </div>
+  );
+})}
         </nav>
 
         <div className="sidebar-footer">
@@ -215,8 +242,9 @@ setDraftLoadResult(loadSavedDrafts());
         </header>
 
         <main className="content">
-          {page === "list" ? (
-            <section className="templates-page" aria-labelledby="templates-title">
+{page === "collected" ? (
+  <CollectedDataPage records={sampleCollectedRecords} />
+) : page === "list" ? (            <section className="templates-page" aria-labelledby="templates-title">
               <h1 id="templates-title">Templates</h1>
               <p>Reusable forms for your warehouses.</p>
 
