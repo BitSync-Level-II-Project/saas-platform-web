@@ -7,6 +7,18 @@ import type {
 import { validateTemplate } from './validateTemplate'
 const STORAGE_KEY = 'sitetrace.template-builder.draft.v1'
 
+export type DraftLoadResult =
+  | {
+      status: 'success'
+      drafts: SavedTemplateDraft[]
+    }
+  | {
+      status: 'error'
+      message: string
+    }
+
+class InvalidStoredDraftsError extends Error {}
+
 function isRecord(
   value: unknown
 ): value is Record<string, unknown> {
@@ -94,62 +106,158 @@ function isDraft(value: unknown): value is TemplateDraft {
   return validFields && new Set(ids).size === ids.length
 }
 
-function isSavedDraft(value: unknown): value is SavedTemplateDraft {
-  return (
-    isRecord(value) &&
-    typeof value.id === 'string' &&
-    isDraft(value)
-  )
+function isSavedDraft(
+  value: unknown
+): value is SavedTemplateDraft {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  const { id, status, version, publishedAt } = value
+
+  if (
+    typeof id !== 'string' ||
+    id.trim() === '' ||
+    !isDraft(value)
+  ) {
+    return false
+  }
+
+  if (
+    status !== undefined &&
+    status !== 'draft' &&
+    status !== 'published'
+  ) {
+    return false
+  }
+
+  if (
+    version !== undefined &&
+    (
+      typeof version !== 'number' ||
+      !Number.isSafeInteger(version) ||
+      version < 1
+    )
+  ) {
+    return false
+  }
+
+  if (
+    publishedAt !== undefined &&
+    (
+      typeof publishedAt !== 'string' ||
+      !Number.isFinite(Date.parse(publishedAt))
+    )
+  ) {
+    return false
+  }
+
+  if (status === 'published') {
+    return (
+      version !== undefined &&
+      typeof publishedAt === 'string'
+    )
+  }
+
+  return true
 }
 
 export function loadTemplateDraft(): TemplateDraft | null {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+  const stored = localStorage.getItem(STORAGE_KEY)
 
-    if (!stored) {
-      return null
-    }
-
-    const parsed: unknown = JSON.parse(stored)
-
-    return isDraft(parsed) ? parsed : null
-  } catch {
+  if (stored === null) {
     return null
   }
-}
 
+  const parsed: unknown = JSON.parse(stored)
+
+  if (!isDraft(parsed)) {
+    throw new InvalidStoredDraftsError(
+      'The previous draft has an invalid format.'
+    )
+  }
+
+  return parsed
+}
 
 
 const DRAFTS_KEY = 'sitetrace.template-builder.drafts.v1'
 
-export function loadSavedDrafts(): SavedTemplateDraft[] {
+export function loadSavedDrafts(): DraftLoadResult {
   try {
     const stored = localStorage.getItem(DRAFTS_KEY)
 
     if (stored === null) {
       const previousDraft = loadTemplateDraft()
 
-      return previousDraft
-        ? [{ ...previousDraft, id: 'imported-current-draft' }]
-        : []
+      return {
+        status: 'success',
+        drafts: previousDraft
+          ? [
+              {
+                ...previousDraft,
+                id: 'imported-current-draft',
+              },
+            ]
+          : [],
+      }
     }
 
     const parsed: unknown = JSON.parse(stored)
 
-    if (!Array.isArray(parsed)) {
-      return []
+    if (
+      !Array.isArray(parsed) ||
+      !parsed.every(isSavedDraft)
+    ) {
+      throw new InvalidStoredDraftsError(
+        'The saved template collection is invalid.'
+      )
     }
 
-    return parsed.filter(isSavedDraft)
-  } catch {
-    return []
+    const ids = parsed.map((draft) => draft.id)
+
+    if (new Set(ids).size !== ids.length) {
+      throw new InvalidStoredDraftsError(
+        'Duplicate template IDs were found.'
+      )
+    }
+
+    return {
+      status: 'success',
+      drafts: parsed,
+    }
+  } catch (error) {
+    const isInvalidData =
+      error instanceof SyntaxError ||
+      error instanceof InvalidStoredDraftsError
+
+    return {
+      status: 'error',
+      message: isInvalidData
+        ? 'Saved templates contain invalid or unsupported data. Your stored data has not been changed.'
+        : 'Browser storage could not be accessed. Check your browser settings and try again.',
+    }
   }
 }
 
 export function saveTemplateDraft(
   draft: SavedTemplateDraft
 ): void {
-  const existingDrafts = loadSavedDrafts()
+  const result = loadSavedDrafts()
+
+if (result.status === 'error') {
+  throw new Error(
+    'Save blocked because existing templates could not be loaded.'
+  )
+}
+
+if (!isSavedDraft(draft)) {
+  throw new Error(
+    'The template has an invalid storage format.'
+  )
+}
+
+const existingDrafts = result.drafts
 
   const existing = existingDrafts.find(
     (item) => item.id === draft.id

@@ -65,8 +65,20 @@ function App() {
     "all" | "published" | "draft"
   >("all");
 
-  const [drafts, setDrafts] = useState<SavedTemplateDraft[]>(loadSavedDrafts);
+const [draftLoadResult, setDraftLoadResult] =
+  useState(loadSavedDrafts);
 
+const drafts =
+  draftLoadResult.status === "success"
+    ? draftLoadResult.drafts
+    : [];
+
+const hasDraftLoadError =
+  draftLoadResult.status === "error";
+
+function retryDraftLoad() {
+  setDraftLoadResult(loadSavedDrafts());
+}
   const [selectedDraft, setSelectedDraft] = useState<SavedTemplateDraft | null>(
     null,
   );
@@ -74,9 +86,13 @@ function App() {
     useState<SavedTemplateDraft | null>(null);
 
   function openNewTemplate() {
-    setSelectedDraft(null);
-    setPage("create");
+  if (hasDraftLoadError) {
+    return;
   }
+
+  setSelectedDraft(null);
+  setPage("create");
+}
 
   function continueDraft(draftId: string) {
     const draft = drafts.find((item) => item.id === draftId);
@@ -101,7 +117,7 @@ function App() {
     setViewedTemplate(template);
   }
   function handleDraftSaved() {
-    setDrafts(loadSavedDrafts());
+setDraftLoadResult(loadSavedDrafts());
     setSelectedDraft(null);
     setPage("list");
   }
@@ -239,15 +255,55 @@ function App() {
                   className="create-button"
                   type="button"
                   onClick={openNewTemplate}
+                  disabled={hasDraftLoadError}
                 >
                   Create template
                 </button>
               </div>
-              <TemplateTable
-                templates={filteredTemplates}
-                onContinue={continueDraft}
-                onView={viewPublishedTemplate}
-              />
+              {draftLoadResult.status === "error" ? (
+  <section
+    className="templates-page__storage-error"
+    aria-labelledby="draft-load-error-title"
+  >
+    <div role="alert">
+      <h2 id="draft-load-error-title">
+        Saved templates could not be loaded
+      </h2>
+
+      <p>{draftLoadResult.message}</p>
+
+      <p>
+        Saving and publishing are blocked until
+        the saved collection can be read.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={retryDraftLoad}
+    >
+      Retry
+    </button>
+  </section>
+) : (
+  <>
+    {draftLoadResult.drafts.length === 0 && (
+      <p
+        className="templates-page__no-saved"
+        role="status"
+      >
+        No saved templates yet. The rows below
+        are sample records.
+      </p>
+    )}
+
+    <TemplateTable
+      templates={filteredTemplates}
+      onContinue={continueDraft}
+      onView={viewPublishedTemplate}
+    />
+  </>
+)}
             </section>
           ) : (
             <CreateTemplatePage
