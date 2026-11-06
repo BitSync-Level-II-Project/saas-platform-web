@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./CreateTemplatePage.css";
 import { FieldToolbox } from "./FieldToolbox";
 import { validateTemplate } from "./validateTemplate";
@@ -14,6 +14,7 @@ import { FormCanvas } from "./FormCanvas";
 import { FieldSettingsPanel } from "./FieldSettingsPanel";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
 import { saveTemplateDraft } from "./templateDraftStorage";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 type CreateTemplatePageProps = {
   onBack: () => void;
@@ -48,6 +49,38 @@ export function CreateTemplatePage({
   const [fields, setFields] = useState<TemplateField[]>(
     () => initialDraft?.fields ?? [],
   );
+
+  const [initialSnapshot] = useState(() =>
+    JSON.stringify({ details, fields }),
+  );
+  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const isDirty = JSON.stringify({ details, fields }) !== initialSnapshot;
+
+  useEffect(() => {
+    if (!isDirty) {
+      return;
+    }
+
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = true;
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isDirty]);
+
+  function handleBack() {
+    if (isDirty) {
+      setIsLeaveDialogOpen(true);
+      return;
+    }
+
+    onBack();
+  }
 
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -191,7 +224,7 @@ export function CreateTemplatePage({
   const validationErrors = validateTemplate(details, fields);
   return (
     <section className="template-builder">
-      <button className="template-builder__back" type="button" onClick={onBack}>
+      <button className="template-builder__back" type="button" onClick={handleBack}>
         ← Templates
       </button>
 
@@ -199,6 +232,11 @@ export function CreateTemplatePage({
         <h1>Create template</h1>
 
         <span className="template-builder__draft">Draft</span>
+        {isDirty && (
+          <span className="template-builder__unsaved" role="status">
+            Unsaved changes
+          </span>
+        )}
 
         <div className="template-builder__actions">
           <button
@@ -353,6 +391,17 @@ export function CreateTemplatePage({
 
         <FieldSettingsPanel field={selectedField} onUpdateField={updateField} />
       </div>
+
+      {isLeaveDialogOpen && (
+        <UnsavedChangesDialog
+          onStay={() => setIsLeaveDialogOpen(false)}
+          onDiscard={onBack}
+          onSave={() => {
+            setIsLeaveDialogOpen(false);
+            handleSaveDraft();
+          }}
+        />
+      )}
 
       {isPreviewOpen && (
         <TemplatePreviewModal
