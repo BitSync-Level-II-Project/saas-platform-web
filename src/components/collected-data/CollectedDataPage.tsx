@@ -1,8 +1,14 @@
 import { useState } from 'react'
-import type {
-  CollectedRecordSummary,
-  ReviewStatus,
+import {
+  reviewLabels,
+  type CollectedRecordSummary,
 } from './collectedDataTypes'
+
+import { RecordDetailsModal } from './RecordDetailsModal'
+
+import {
+  downloadCollectedRecordsCsv,
+} from './exportCollectedRecords'
 
 import './CollectedDataPage.css'
 
@@ -10,12 +16,7 @@ type CollectedDataPageProps = {
   records: CollectedRecordSummary[]
 }
 
-const reviewLabels: Record<ReviewStatus, string> = {
-  pending: 'Pending review',
-  approved: 'Approved',
-  'recheck-requested': 'Recheck requested',
-  rejected: 'Rejected',
-}
+
 
 const receivedTimeFormatter = new Intl.DateTimeFormat(
   'en-GB',
@@ -34,6 +35,8 @@ export function CollectedDataPage({
     useState('all')
   const [reviewFilter, setReviewFilter] =
     useState('all')
+  const [selectedRecordId, setSelectedRecordId] =
+    useState<string | null>(null)
 
   const warehouses = [
     ...new Set(records.map((record) => record.warehouse)),
@@ -70,6 +73,10 @@ export function CollectedDataPage({
     )
   })
 
+  const selectedRecord = records.find(
+    (record) => record.id === selectedRecordId,
+  )
+
   function clearFilters() {
     setSearchText('')
     setWarehouseFilter('all')
@@ -89,6 +96,17 @@ export function CollectedDataPage({
         <span className="collected-data__sample">
           Sample data
         </span>
+
+        <button
+  type="button"
+  className="collected-data__export"
+  disabled={filteredRecords.length === 0}
+  onClick={() =>
+    downloadCollectedRecordsCsv(filteredRecords)
+  }
+>
+  Export CSV
+</button>
       </div>
 
       <p className="collected-data__subtitle">
@@ -159,6 +177,7 @@ export function CollectedDataPage({
                 <th scope="col">Submitted by</th>
                 <th scope="col">Received</th>
                 <th scope="col">Review</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
 
@@ -166,7 +185,7 @@ export function CollectedDataPage({
               {filteredRecords.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="collected-data__empty"
                   >
                     {records.length === 0
@@ -212,6 +231,17 @@ export function CollectedDataPage({
                         {reviewLabels[record.reviewStatus]}
                       </span>
                     </td>
+
+                    <td>
+  <button
+    type="button"
+    className="text-action"
+    aria-label={`View record ${record.id}`}
+    onClick={() => setSelectedRecordId(record.id)}
+  >
+    View
+  </button>
+</td>
                   </tr>
                 ))
               )}
@@ -223,6 +253,14 @@ export function CollectedDataPage({
           {filteredRecords.length} of {records.length} records
         </div>
       </div>
+
+      {selectedRecord && (
+  <RecordDetailsModal
+    key={selectedRecord.id}
+    record={selectedRecord}
+    onClose={() => setSelectedRecordId(null)}
+  />
+)}
     </section>
   )
 }
