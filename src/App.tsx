@@ -1,122 +1,361 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import {
+  Bell,
+  ChartNoAxesColumn,
+  ClipboardList,
+  FileText,
+  House,
+  LogOut,
+  UsersRound,
+  Warehouse,
+} from "lucide-react";
+import "./App.css";
+import { TemplateTable } from "./components/TemplateTable";
+import type { Template } from "./components/TemplateTable";
+import { useState } from "react";
+import { CreateTemplatePage } from "./components/CreateTemplatePage";
+import siteTraceLogo from "./assets/SiteTrace-logo.svg";
+import { loadSavedDrafts } from "./components/templateDraftStorage";
+import { TemplatePreviewModal } from "./components/TemplatePreviewModal";
+import { CollectedDataPage } from "./components/collected-data/CollectedDataPage";
+import { sampleCollectedRecords } from "./components/collected-data/sampleCollectedRecords";
+
+import type { SavedTemplateDraft } from "./components/templateTypes";
+
+const sampleTemplates: Template[] = [
+  {
+    id: "equipment-inspection",
+    name: "Equipment inspection",
+    updated: "today",
+    warehouse: "Colombo warehouse",
+    fields: 6,
+    status: "published",
+  },
+  {
+    id: "loading-bay-safety",
+    name: "Loading bay safety",
+    updated: "yesterday",
+    warehouse: "Colombo warehouse",
+    fields: 8,
+    status: "published",
+  },
+  {
+    id: "stock-condition-check",
+    name: "Stock condition check",
+    updated: "18 Oct",
+    warehouse: "Galle warehouse",
+    fields: 5,
+    status: "draft",
+  },
+];
+
+const menuItems = [
+  { label: "Overview", icon: House },
+  { label: "Supervisors", icon: UsersRound },
+  { label: "Warehouses", icon: Warehouse },
+  { label: "Templates", icon: FileText },
+  { label: "Tasks", icon: ClipboardList },
+  { label: "Collected data", icon: ChartNoAxesColumn },
+  { label: "Alerts", icon: Bell },
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+const [page, setPage] =
+  useState<"list" | "create" | "collected">("list");
+  const [searchText, setSearchText] = useState("");
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "published" | "draft"
+  >("all");
 
-      <div className="ticks"></div>
+const [draftLoadResult, setDraftLoadResult] =
+  useState(loadSavedDrafts);
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+const drafts =
+  draftLoadResult.status === "success"
+    ? draftLoadResult.drafts
+    : [];
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+const hasDraftLoadError =
+  draftLoadResult.status === "error";
+
+function retryDraftLoad() {
+  setDraftLoadResult(loadSavedDrafts());
+}
+  const [selectedDraft, setSelectedDraft] = useState<SavedTemplateDraft | null>(
+    null,
+  );
+  const [viewedTemplate, setViewedTemplate] =
+    useState<SavedTemplateDraft | null>(null);
+
+  function openNewTemplate() {
+  if (hasDraftLoadError) {
+    return;
+  }
+
+  setSelectedDraft(null);
+  setPage("create");
 }
 
-export default App
+  function continueDraft(draftId: string) {
+    const draft = drafts.find((item) => item.id === draftId);
+
+    if (!draft) {
+      return;
+    }
+
+    setSelectedDraft(draft);
+    setPage("create");
+  }
+
+  function viewPublishedTemplate(templateId: string) {
+    const template = drafts.find(
+      (item) => item.id === templateId && item.status === "published",
+    );
+
+    if (!template) {
+      return;
+    }
+
+    setViewedTemplate(template);
+  }
+  function handleDraftSaved() {
+setDraftLoadResult(loadSavedDrafts());
+    setSelectedDraft(null);
+    setPage("list");
+  }
+  const warehouseLabels: Record<string, string> = {
+    all: "All warehouses",
+    colombo: "Colombo warehouse",
+    galle: "Galle warehouse",
+  };
+
+  const draftRows: Template[] = drafts.map((draft) => ({
+    id: draft.id,
+    name: draft.details.name,
+    updated: new Date(draft.savedAt).toLocaleString(),
+    warehouse:
+      warehouseLabels[draft.details.warehouse] ??
+      (draft.details.warehouse || "Not selected"),
+    fields: draft.fields.length,
+    status: draft.status ?? "draft",
+    canContinue: draft.status !== "published",
+    canView: draft.status === "published",
+  }));
+
+  const templates: Template[] = [...draftRows, ...sampleTemplates];
+
+  const normalizedSearch = searchText.trim().toLowerCase();
+
+  const filteredTemplates = templates.filter((template) => {
+    const matchesSearch =
+      template.name.toLowerCase().includes(normalizedSearch) ||
+      template.warehouse.toLowerCase().includes(normalizedSearch);
+
+    const matchesStatus =
+      statusFilter === "all" || template.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+  return (
+    <div className="manager-layout">
+      <aside className="sidebar">
+        <div className="brand">
+          <img className="brand-logo" src={siteTraceLogo} alt="SiteTrace" />
+        </div>
+
+        <div className="organization-card">
+          <strong>Nova Industries</strong>
+          <small>Manager</small>
+        </div>
+
+        <nav className="sidebar-nav" aria-label="Manager navigation">
+          {menuItems.map((item) => {
+  const Icon = item.icon;
+
+  const targetPage =
+    item.label === "Templates"
+      ? "list"
+      : item.label === "Collected data"
+        ? "collected"
+        : null;
+
+  const isActive =
+    item.label === "Templates"
+      ? page !== "collected"
+      : item.label === "Collected data" &&
+        page === "collected";
+
+  if (targetPage) {
+    return (
+      <button
+        key={item.label}
+        type="button"
+        className={`nav-item ${
+          isActive ? "nav-item--active" : ""
+        }`}
+        aria-current={isActive ? "page" : undefined}
+        disabled={page === "create"}
+        onClick={() => setPage(targetPage)}
+      >
+        <Icon size={17} strokeWidth={1.8} />
+        <span>{item.label}</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="nav-item" key={item.label}>
+      <Icon size={17} strokeWidth={1.8} />
+      <span>{item.label}</span>
+    </div>
+  );
+})}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="profile">
+            <span className="avatar avatar--small">DW</span>
+            <div>
+              <strong>Dinesh</strong>
+              <small>My profile</small>
+            </div>
+          </div>
+
+          <div className="nav-item sign-out">
+            <LogOut size={17} strokeWidth={1.8} />
+            <span>Sign out</span>
+          </div>
+        </div>
+      </aside>
+
+      <div className="page-area">
+        <header className="topbar">
+          <div className="breadcrumb">
+            <strong>Nova Industries</strong>
+            <span>/ Manager</span>
+          </div>
+
+          <div className="topbar-actions">
+            <Bell size={18} strokeWidth={1.8} aria-label="Notifications" />
+            <span className="avatar">DW</span>
+          </div>
+        </header>
+
+        <main className="content">
+{page === "collected" ? (
+  <CollectedDataPage records={sampleCollectedRecords} />
+) : page === "list" ? (            <section className="templates-page" aria-labelledby="templates-title">
+              <h1 id="templates-title">Templates</h1>
+              <p>Reusable forms for your warehouses.</p>
+
+              <div className="template-toolbar">
+                <input
+                  className="search-input"
+                  type="search"
+                  placeholder="Search templates"
+                  aria-label="Search templates"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.currentTarget.value)}
+                />
+
+                <select
+                  className="status-select"
+                  aria-label="Filter by status"
+                  value={statusFilter}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+
+                    if (
+                      value === "all" ||
+                      value === "published" ||
+                      value === "draft"
+                    ) {
+                      setStatusFilter(value);
+                    }
+                  }}
+                >
+                  <option value="all">All statuses</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+
+                <button
+                  className="create-button"
+                  type="button"
+                  onClick={openNewTemplate}
+                  disabled={hasDraftLoadError}
+                >
+                  Create template
+                </button>
+              </div>
+              {draftLoadResult.status === "error" ? (
+  <section
+    className="templates-page__storage-error"
+    aria-labelledby="draft-load-error-title"
+  >
+    <div role="alert">
+      <h2 id="draft-load-error-title">
+        Saved templates could not be loaded
+      </h2>
+
+      <p>{draftLoadResult.message}</p>
+
+      <p>
+        Saving and publishing are blocked until
+        the saved collection can be read.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={retryDraftLoad}
+    >
+      Retry
+    </button>
+  </section>
+) : (
+  <>
+    {draftLoadResult.drafts.length === 0 && (
+      <p
+        className="templates-page__no-saved"
+        role="status"
+      >
+        No saved templates yet. The rows below
+        are sample records.
+      </p>
+    )}
+
+    <TemplateTable
+      templates={filteredTemplates}
+      onContinue={continueDraft}
+      onView={viewPublishedTemplate}
+    />
+  </>
+)}
+            </section>
+          ) : (
+            <CreateTemplatePage
+              key={selectedDraft?.id ?? "new-template"}
+              initialDraft={selectedDraft}
+              onBack={() => setPage("list")}
+              onSaved={handleDraftSaved}
+            />
+          )}
+
+          {viewedTemplate && (
+            <TemplatePreviewModal
+              key={viewedTemplate.id}
+              title={viewedTemplate.details.name}
+              description={viewedTemplate.details.description}
+              fields={viewedTemplate.fields}
+              readOnly
+              onClose={() => setViewedTemplate(null)}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
