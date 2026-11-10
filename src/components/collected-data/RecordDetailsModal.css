@@ -1,0 +1,142 @@
+.record-details {
+    box-sizing: border-box;
+    width: min(860px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    padding: 28px;
+    overflow-y: auto;
+    color: #20223d;
+    color-scheme: light;
+    background: #fff;
+    border: 1px solid #dce1ed;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgb(32 34 61 / 20%);
+    font: inherit;
+    text-align: left;
+}
+
+.record-details::backdrop {
+    background: rgb(24 28 49 / 50%);
+}
+
+.record-details__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.record-details h2 {
+    margin: 0;
+    color: #20223d;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.record-details h3 {
+    margin: 0 0 16px;
+    font-size: 15px;
+}
+
+.record-details p {
+    margin: 8px 0 0;
+    color: #727b95;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.record-details>section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e8ebf3;
+}
+
+.record-details__metadata {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin: 0;
+}
+
+.record-details dt {
+    color: #727b95;
+    font-size: 11px;
+}
+
+.record-details dd {
+    margin: 6px 0 0;
+    color: #20223d;
+    font-size: 13px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.record-details__answers {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+}
+
+.record-details__evidence-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.record-details button {
+    padding: 10px 14px;
+    color: #4f46e5;
+    background: #fff;
+    border: 1px solid #dce1ed;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.record-details button[aria-pressed="true"] {
+    background: #eeecff;
+    border-color: #4f46e5;
+}
+
+.record-details button:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 3px;
+}
+
+.record-details__image {
+    margin: 18px 0 0;
+    padding: 12px;
+    background: #f6f7fb;
+    border: 1px solid #dce1ed;
+    border-radius: 8px;
+}
+
+.record-details__image img {
+    display: block;
+    width: 100%;
+    max-height: 440px;
+    object-fit: contain;
+}
+
+.record-details figcaption {
+    margin-top: 10px;
+    color: #727b95;
+    font-size: 11px;
+}
+
+.record-details__footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+    .record-details {
+        padding: 20px;
+    }
+
+    .record-details__metadata {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

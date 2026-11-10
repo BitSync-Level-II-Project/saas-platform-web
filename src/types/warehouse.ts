@@ -6,6 +6,8 @@ export interface Warehouse {
   locations: number;
   supervisor: string;
   status: 'Active' | 'Inactive';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Location {
