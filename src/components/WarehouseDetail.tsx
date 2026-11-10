@@ -56,15 +56,8 @@ export default function WarehouseDetail({
       status: 'Active' | 'Inactive';
     },
   ) => {
-    try {
-      const updated = await warehouseService.updateWarehouse(id, updatedData);
-      onWarehouseUpdated?.(updated);
-      setIsEditWarehouseModalOpen(false);
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Failed to update warehouse';
-      alert(msg);
-    }
+    const updated = await warehouseService.updateWarehouse(id, updatedData);
+    onWarehouseUpdated?.(updated);
   };
 
   return (
