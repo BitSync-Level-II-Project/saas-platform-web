@@ -357,7 +357,10 @@ export default function App() {
           {activeTab === 'warehouses' &&
             (selectedWarehouse ? (
               <WarehouseDetail
-                warehouse={selectedWarehouse}
+                warehouse={{
+                  ...selectedWarehouse,
+                  locations: warehouseService.getLocations(selectedWarehouse.id).length,
+                }}
                 onBack={() => {
                   setSelectedWarehouse(null);
                   triggerRefresh();

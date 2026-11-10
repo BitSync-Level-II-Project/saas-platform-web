@@ -109,6 +109,14 @@ export default function WarehouseDetail({
         </button>
       </div>
 
+      {/* Local-only Locations Notice */}
+      <div className="location-scope-banner" role="note">
+        <span className="location-scope-badge">Local Preview</span>
+        <span>
+          Capture locations are currently saved in browser local storage. Database synchronization and editing will be enabled in Phase 3.
+        </span>
+      </div>
+
       {/* Locations Table */}
       <div className="table-container">
         <table className="warehouse-table">
@@ -147,12 +155,14 @@ export default function WarehouseDetail({
                     <span className="badge-active">{loc.status}</span>
                   </td>
 
-                  {/* Edit Action */}
+                  {/* Edit Action (Disabled placeholder until Phase 3) */}
                   <td className="table-td text-right">
                     <button
                       className="btn-open"
                       type="button"
-                      onClick={() => alert(`Edit location: ${loc.name}`)}
+                      disabled
+                      title="Editing locations will be enabled in Phase 3"
+                      style={{ opacity: 0.4, cursor: 'not-allowed' }}
                     >
                       Edit
                     </button>

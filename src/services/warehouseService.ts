@@ -46,7 +46,13 @@ export const warehouseService = {
     }
 
     const data = await response.json();
-    return data as PaginatedWarehousesResponse;
+    return {
+      ...(data as PaginatedWarehousesResponse),
+      items: (data.items as Warehouse[]).map((w) => ({
+        ...w,
+        locations: warehouseService.getLocations(w.id).length,
+      })),
+    };
   },
 
   // Register a new warehouse directly to PostgreSQL via POST
