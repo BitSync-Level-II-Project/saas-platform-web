@@ -3,11 +3,13 @@ import type { Warehouse } from '../types';
 interface WarehouseTableProps {
   warehouses: Warehouse[];
   onOpenWarehouse?: (warehouse: Warehouse) => void;
+  onDeleteWarehouse?: (warehouse: Warehouse) => void;
 }
 
 export default function WarehouseTable({
   warehouses,
   onOpenWarehouse,
+  onDeleteWarehouse,
 }: WarehouseTableProps) {
   return (
     <div className="table-container">
@@ -18,7 +20,7 @@ export default function WarehouseTable({
             <th className="table-th">Locations</th>
             <th className="table-th">Supervisor</th>
             <th className="table-th">Status</th>
-            <th className="table-th text-right"></th>
+            <th className="table-th text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -54,14 +56,25 @@ export default function WarehouseTable({
                   </span>
                 </td>
 
-                {/* Open Action */}
+                {/* Actions: Open & Delete */}
                 <td className="table-td text-right">
-                  <button
-                    className="btn-open"
-                    onClick={() => onOpenWarehouse?.(warehouse)}
-                  >
-                    Open
-                  </button>
+                  <div className="table-actions">
+                    <button
+                      className="btn-open"
+                      onClick={() => onOpenWarehouse?.(warehouse)}
+                      type="button"
+                    >
+                      Open
+                    </button>
+                    <button
+                      className="btn-delete"
+                      onClick={() => onDeleteWarehouse?.(warehouse)}
+                      type="button"
+                      title="Delete warehouse"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))

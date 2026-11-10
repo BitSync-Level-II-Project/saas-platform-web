@@ -80,6 +80,23 @@ export default function App() {
     }
   };
 
+  // 7. Function to delete a warehouse directly from PostgreSQL
+  const handleDeleteWarehouse = async (warehouse: Warehouse) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${warehouse.name}"? This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await warehouseService.deleteWarehouse(warehouse.id);
+      triggerRefresh();
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Failed to delete warehouse';
+      alert(msg);
+    }
+  };
+
   return (
     <div className="app-layout">
       {/* 1. Left Sidebar */}
@@ -156,6 +173,7 @@ export default function App() {
                   onOpenWarehouse={(warehouse) =>
                     setSelectedWarehouse(warehouse)
                   }
+                  onDeleteWarehouse={handleDeleteWarehouse}
                 />
               )}
 
