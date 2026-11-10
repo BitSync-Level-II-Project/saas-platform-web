@@ -155,13 +155,8 @@ export default function App() {
     address?: string;
     supervisor: string;
   }) => {
-    try {
-      await warehouseService.addWarehouse(newWarehouseData);
-      triggerRefresh();
-      setIsAddWarehouseModalOpen(false);
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to create warehouse');
-    }
+    await warehouseService.addWarehouse(newWarehouseData);
+    triggerRefresh();
   };
 
   const handleDeleteWarehouse = async (warehouse: Warehouse) => {
