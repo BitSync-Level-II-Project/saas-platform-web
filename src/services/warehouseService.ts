@@ -1,130 +1,118 @@
 import type { Warehouse, Location } from '../types';
 
-const STORAGE_KEY = 'sitetrace_warehouses';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 const LOCATIONS_STORAGE_KEY = 'sitetrace_locations';
 
-// Initial default warehouses matching the design
-const DEFAULT_WAREHOUSES: Warehouse[] = [
-  {
-    id: '1',
-    name: 'Colombo warehouse',
-    city: 'Colombo, Sri Lanka',
-    locations: 4,
-    supervisor: 'Malith Senanayake',
-    status: 'Active',
-  },
-  {
-    id: '2',
-    name: 'Galle warehouse',
-    city: 'Galle, Sri Lanka',
-    locations: 3,
-    supervisor: 'Tharushi Perera',
-    status: 'Active',
-  },
-  {
-    id: '3',
-    name: 'Katunayake warehouse',
-    city: 'Katunayake, Sri Lanka',
-    locations: 5,
-    supervisor: 'Ruwan Silva',
-    status: 'Active',
-  },
-];
-
-// Initial default locations matching Screenshot 2
-const DEFAULT_LOCATIONS: Location[] = [
-  {
-    id: 'loc-1',
-    warehouseId: '1',
-    name: 'Loading bay',
-    description: 'Ground floor, dock entrance',
-    assignedWork: '4 tasks',
-    status: 'Active',
-  },
-  {
-    id: 'loc-2',
-    warehouseId: '1',
-    name: 'Machine room',
-    description: 'Main production facility',
-    assignedWork: '6 tasks',
-    status: 'Active',
-  },
-  {
-    id: 'loc-3',
-    warehouseId: '1',
-    name: 'Storage aisle A',
-    description: 'High-density pallet rack',
-    assignedWork: '2 tasks',
-    status: 'Active',
-  },
-];
+export interface CreateWarehouseInput {
+  name: string;
+  city: string;
+  address?: string;
+  supervisor?: string;
+}
 
 export const warehouseService = {
-  // 1. Get all warehouses
-  getWarehouses: (): Warehouse[] => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_WAREHOUSES));
-      return DEFAULT_WAREHOUSES;
+  // 1. Fetch warehouses directly from PostgreSQL via NestJS API
+  getWarehouses: async (
+    search?: string,
+    status?: string,
+  ): Promise<Warehouse[]> => {
+    const params = new URLSearchParams();
+    if (search && search.trim()) {
+      params.append('search', search.trim());
     }
-    try {
-      return JSON.parse(saved) as Warehouse[];
-    } catch {
-      return DEFAULT_WAREHOUSES;
+    if (status && status !== 'All') {
+      params.append('status', status);
+    }
+
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/warehouses${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch warehouses (HTTP ${response.status})`);
+    }
+
+    const data = await response.json();
+    return data.items as Warehouse[];
+  },
+
+  // 2. Register a new warehouse directly to PostgreSQL via POST
+  addWarehouse: async (input: CreateWarehouseInput): Promise<Warehouse> => {
+    const response = await fetch(`${API_BASE_URL}/warehouses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: input.name,
+        city: input.city,
+        address: input.address || '',
+        supervisor:
+          input.supervisor === 'Assign later'
+            ? 'Unassigned'
+            : input.supervisor || 'Unassigned',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to create warehouse');
+    }
+
+    return (await response.json()) as Warehouse;
+  },
+
+  // 3. Delete a warehouse directly from PostgreSQL via DELETE
+  deleteWarehouse: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/warehouses/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to delete warehouse (HTTP ${response.status})`);
     }
   },
 
-  // 2. Add a new warehouse
-  addWarehouse: (newWarehouse: Warehouse): Warehouse[] => {
-    const current = warehouseService.getWarehouses();
-    const updated = [newWarehouse, ...current];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return updated;
+  // 4. Update warehouse details or toggle status via PATCH
+  updateWarehouse: async (
+    id: string,
+    data: Partial<Warehouse>,
+  ): Promise<Warehouse> => {
+    const response = await fetch(`${API_BASE_URL}/warehouses/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to update warehouse (HTTP ${response.status})`);
+    }
+    return (await response.json()) as Warehouse;
   },
 
-  // 3. Get locations for a specific warehouse
+  // 5. Locations queries (clean, starts empty until Locations backend phase)
   getLocations: (warehouseId: string): Location[] => {
     const saved = localStorage.getItem(LOCATIONS_STORAGE_KEY);
-    let allLocations: Location[] = DEFAULT_LOCATIONS;
-    if (saved) {
-      try {
-        allLocations = JSON.parse(saved) as Location[];
-      } catch {
-        allLocations = DEFAULT_LOCATIONS;
-      }
-    } else {
-      localStorage.setItem(LOCATIONS_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+    if (!saved) return [];
+    try {
+      const allLocations = JSON.parse(saved) as Location[];
+      return allLocations.filter((loc) => loc.warehouseId === warehouseId);
+    } catch {
+      return [];
     }
-    return allLocations.filter((loc) => loc.warehouseId === warehouseId);
   },
 
-  // 4. Add a new location and increment warehouse locations count
   addLocation: (newLocation: Location): Location[] => {
     const saved = localStorage.getItem(LOCATIONS_STORAGE_KEY);
-    let allLocations: Location[] = DEFAULT_LOCATIONS;
+    let allLocations: Location[] = [];
     if (saved) {
       try {
         allLocations = JSON.parse(saved) as Location[];
       } catch {
-        allLocations = DEFAULT_LOCATIONS;
+        allLocations = [];
       }
     }
     const updatedAll = [newLocation, ...allLocations];
     localStorage.setItem(LOCATIONS_STORAGE_KEY, JSON.stringify(updatedAll));
-
-    // Also increment warehouse location count
-    const warehouses = warehouseService.getWarehouses();
-    const updatedWarehouses = warehouses.map((w) =>
-      w.id === newLocation.warehouseId ? { ...w, locations: w.locations + 1 } : w
+    return updatedAll.filter(
+      (loc) => loc.warehouseId === newLocation.warehouseId,
     );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedWarehouses));
-
-    return updatedAll.filter((loc) => loc.warehouseId === newLocation.warehouseId);
-  },
-
-  // Helper to reset back to initial defaults
-  resetDefaults: (): void => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_WAREHOUSES));
-    localStorage.setItem(LOCATIONS_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
   },
 };
