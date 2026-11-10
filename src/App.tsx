@@ -89,6 +89,7 @@ export default function App() {
 
     try {
       await warehouseService.deleteWarehouse(warehouse.id);
+      setSelectedWarehouse(null);
       triggerRefresh();
     } catch (err: unknown) {
       const msg =
@@ -118,6 +119,11 @@ export default function App() {
               onLocationAdded={() => {
                 triggerRefresh();
               }}
+              onWarehouseUpdated={(updated) => {
+                setSelectedWarehouse(updated);
+                triggerRefresh();
+              }}
+              onDeleteWarehouse={handleDeleteWarehouse}
             />
           ) : (
             /* Main Warehouses List (M2-01) */

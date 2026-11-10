@@ -1,26 +1,33 @@
 import { useState } from 'react';
 import { warehouseService } from '../services/warehouseService';
 import AddLocationModal from './AddLocationModal';
+import EditWarehouseModal from './EditWarehouseModal';
 import type { Warehouse, Location } from '../types';
 
 interface WarehouseDetailProps {
   warehouse: Warehouse;
   onBack: () => void;
   onLocationAdded?: () => void;
+  onWarehouseUpdated?: (updated: Warehouse) => void;
+  onDeleteWarehouse?: (warehouse: Warehouse) => void;
 }
 
 export default function WarehouseDetail({
   warehouse,
   onBack,
   onLocationAdded,
+  onWarehouseUpdated,
+  onDeleteWarehouse,
 }: WarehouseDetailProps) {
   // 1. Locations list for this warehouse
   const [locations, setLocations] = useState<Location[]>(() =>
-    warehouseService.getLocations(warehouse.id)
+    warehouseService.getLocations(warehouse.id),
   );
 
-  // 2. State for Add Location Modal
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // 2. Modals state
+  const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
+  const [isEditWarehouseModalOpen, setIsEditWarehouseModalOpen] =
+    useState(false);
 
   // 3. Handler to add a new location
   const handleAddLocation = (data: { name: string; description?: string }) => {
@@ -33,10 +40,31 @@ export default function WarehouseDetail({
       status: 'Active',
     };
 
-    // Save permanently via warehouseService
     const updated = warehouseService.addLocation(newLoc);
     setLocations(updated);
     onLocationAdded?.();
+  };
+
+  // 4. Handler to update warehouse
+  const handleUpdateWarehouse = async (
+    id: string,
+    updatedData: {
+      name: string;
+      city: string;
+      address?: string;
+      supervisor: string;
+      status: 'Active' | 'Inactive';
+    },
+  ) => {
+    try {
+      const updated = await warehouseService.updateWarehouse(id, updatedData);
+      onWarehouseUpdated?.(updated);
+      setIsEditWarehouseModalOpen(false);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Failed to update warehouse';
+      alert(msg);
+    }
   };
 
   return (
@@ -57,7 +85,7 @@ export default function WarehouseDetail({
         <button
           className="btn-outline"
           type="button"
-          onClick={() => alert(`Edit warehouse feature for ${warehouse.name}`)}
+          onClick={() => setIsEditWarehouseModalOpen(true)}
         >
           Edit warehouse
         </button>
@@ -74,7 +102,7 @@ export default function WarehouseDetail({
         {/* Add Location Primary Button */}
         <button
           className="btn-primary"
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={() => setIsAddLocationModalOpen(true)}
           type="button"
         >
           Add location
@@ -96,7 +124,8 @@ export default function WarehouseDetail({
             {locations.length === 0 ? (
               <tr>
                 <td colSpan={4} className="empty-state">
-                  No capture locations added yet. Click &quot;Add location&quot; to register one.
+                  No capture locations added yet. Click &quot;Add location&quot;
+                  to register one.
                 </td>
               </tr>
             ) : (
@@ -111,15 +140,11 @@ export default function WarehouseDetail({
                   </td>
 
                   {/* Assigned Work */}
-                  <td className="table-td text-muted">
-                    {loc.assignedWork}
-                  </td>
+                  <td className="table-td text-muted">{loc.assignedWork}</td>
 
                   {/* Status Badge */}
                   <td className="table-td">
-                    <span className="badge-active">
-                      {loc.status}
-                    </span>
+                    <span className="badge-active">{loc.status}</span>
                   </td>
 
                   {/* Edit Action */}
@@ -144,11 +169,23 @@ export default function WarehouseDetail({
         </div>
       </div>
 
+      {/* Edit Warehouse Modal (keyed so form resets whenever warehouse updates) */}
+      {isEditWarehouseModalOpen && (
+        <EditWarehouseModal
+          key={`${warehouse.id}-${warehouse.updatedAt || ''}`}
+          isOpen={isEditWarehouseModalOpen}
+          warehouse={warehouse}
+          onClose={() => setIsEditWarehouseModalOpen(false)}
+          onUpdateWarehouse={handleUpdateWarehouse}
+          onDeleteWarehouse={onDeleteWarehouse}
+        />
+      )}
+
       {/* Add Location Modal */}
       <AddLocationModal
-        isOpen={isAddModalOpen}
+        isOpen={isAddLocationModalOpen}
         warehouse={warehouse}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => setIsAddLocationModalOpen(false)}
         onAddLocation={handleAddLocation}
       />
     </div>
