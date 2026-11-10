@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import WarehouseFilters from './components/WarehouseFilters';
@@ -9,13 +9,16 @@ import { warehouseService } from './services/warehouseService';
 import type { Warehouse } from './types';
 
 export default function App() {
-  // 1. Load warehouses from our persistent warehouseService
-  const [warehouses, setWarehouses] = useState<Warehouse[]>(() =>
-    warehouseService.getWarehouses()
-  );
+  // 1. Live warehouses state from PostgreSQL backend
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // 2. Navigation state: null = list view, or Warehouse = detail/locations view
-  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
+    null,
+  );
 
   // 3. Search and Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,42 +27,58 @@ export default function App() {
   // 4. Modal state for adding a warehouse
   const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
 
-  // 5. Function to add a new warehouse and save to storage
-  const handleAddWarehouse = (newWarehouseData: {
+  // 5. Fetch warehouses from NestJS backend API on mount or filter changes
+  useEffect(() => {
+    let isCancelled = false;
+
+    warehouseService
+      .getWarehouses(searchTerm, statusFilter)
+      .then((data) => {
+        if (!isCancelled) {
+          setWarehouses(data);
+          setErrorMessage(null);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!isCancelled) {
+          const msg =
+            err instanceof Error
+              ? err.message
+              : 'Failed to connect to backend API';
+          setErrorMessage(msg);
+          setWarehouses([]);
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [searchTerm, statusFilter, refreshTrigger]);
+
+  // Helper to trigger a live re-fetch from PostgreSQL
+  const triggerRefresh = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
+  // 6. Function to register a new warehouse directly to PostgreSQL
+  const handleAddWarehouse = async (newWarehouseData: {
     name: string;
     city: string;
     address?: string;
     supervisor: string;
   }) => {
-    const newEntry: Warehouse = {
-      id: Date.now().toString(),
-      name: newWarehouseData.name,
-      city: newWarehouseData.city,
-      locations: 0,
-      supervisor:
-        newWarehouseData.supervisor === 'Assign later'
-          ? 'Unassigned'
-          : newWarehouseData.supervisor,
-      status: 'Active',
-    };
-
-    // Save permanently via warehouseService
-    const updatedList = warehouseService.addWarehouse(newEntry);
-    setWarehouses(updatedList);
+    try {
+      await warehouseService.addWarehouse(newWarehouseData);
+      triggerRefresh();
+      setIsWarehouseModalOpen(false);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Failed to create warehouse';
+      alert(msg);
+    }
   };
-
-  // 6. Filter list dynamically based on search & status
-  const filteredWarehouses = warehouses.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.supervisor.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'All' || item.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
 
   return (
     <div className="app-layout">
@@ -72,16 +91,15 @@ export default function App() {
 
         <main className="page-container">
           {selectedWarehouse ? (
-            /* Locations View (M2-02 - Screenshots 1 & 2) */
+            /* Locations View (M2-02) */
             <WarehouseDetail
               warehouse={selectedWarehouse}
               onBack={() => {
                 setSelectedWarehouse(null);
-                setWarehouses(warehouseService.getWarehouses());
+                triggerRefresh();
               }}
               onLocationAdded={() => {
-                // Keep warehouses location count in sync
-                setWarehouses(warehouseService.getWarehouses());
+                triggerRefresh();
               }}
             />
           ) : (
@@ -89,7 +107,9 @@ export default function App() {
             <>
               <header className="page-header">
                 <h1 className="page-title">Warehouses</h1>
-                <p className="page-subtitle">Manage warehouses and their locations.</p>
+                <p className="page-subtitle">
+                  Manage warehouses and their locations.
+                </p>
               </header>
 
               {/* Filter Bar with Search, Dropdown & Add button */}
@@ -101,11 +121,43 @@ export default function App() {
                 onAddClick={() => setIsWarehouseModalOpen(true)}
               />
 
-              {/* Table */}
-              <WarehouseTable
-                warehouses={filteredWarehouses}
-                onOpenWarehouse={(warehouse) => setSelectedWarehouse(warehouse)}
-              />
+              {/* Error banner if backend server is not running */}
+              {errorMessage && (
+                <div
+                  style={{
+                    backgroundColor: '#FEE2E2',
+                    color: '#B91C1C',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                  }}
+                >
+                  ⚠️ <strong>Backend Offline:</strong> {errorMessage}. Make sure
+                  the backend server is running on port 3000 (
+                  <code>npm run start:dev</code>).
+                </div>
+              )}
+
+              {/* Loading State or Table */}
+              {isLoading && warehouses.length === 0 ? (
+                <div
+                  style={{
+                    padding: '40px',
+                    textAlign: 'center',
+                    color: '#6B7280',
+                  }}
+                >
+                  Loading warehouses from database...
+                </div>
+              ) : (
+                <WarehouseTable
+                  warehouses={warehouses}
+                  onOpenWarehouse={(warehouse) =>
+                    setSelectedWarehouse(warehouse)
+                  }
+                />
+              )}
 
               {/* Add Warehouse Modal Dialog */}
               <AddWarehouseModal
