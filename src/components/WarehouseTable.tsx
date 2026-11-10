@@ -2,15 +2,28 @@ import type { Warehouse } from '../types';
 
 interface WarehouseTableProps {
   warehouses: Warehouse[];
+  total?: number;
+  currentPage?: number;
+  totalPages?: number;
+  limit?: number;
+  onPageChange?: (page: number) => void;
   onOpenWarehouse?: (warehouse: Warehouse) => void;
   onDeleteWarehouse?: (warehouse: Warehouse) => void;
 }
 
 export default function WarehouseTable({
   warehouses,
+  total = warehouses.length,
+  currentPage = 1,
+  totalPages = 1,
+  limit = 10,
+  onPageChange,
   onOpenWarehouse,
   onDeleteWarehouse,
 }: WarehouseTableProps) {
+  const startRecord = total === 0 ? 0 : (currentPage - 1) * limit + 1;
+  const endRecord = Math.min(currentPage * limit, total);
+
   return (
     <div className="table-container">
       <table className="warehouse-table">
@@ -82,9 +95,39 @@ export default function WarehouseTable({
         </tbody>
       </table>
 
-      {/* Record Counter Footer */}
+      {/* Record Counter & Pagination Controls Footer */}
       <div className="table-footer">
-        {warehouses.length} {warehouses.length === 1 ? 'record' : 'records'}
+        <div className="table-footer-info">
+          {total === 0
+            ? '0 records'
+            : `Showing ${startRecord}–${endRecord} of ${total} records`}
+        </div>
+
+        {totalPages > 1 && onPageChange && (
+          <nav className="pagination-controls" aria-label="Warehouse pagination">
+            <button
+              type="button"
+              className="pagination-btn"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              aria-label="Previous page"
+            >
+              Previous
+            </button>
+            <span className="pagination-info" aria-current="page">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="pagination-btn"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              aria-label="Next page"
+            >
+              Next
+            </button>
+          </nav>
+        )}
       </div>
     </div>
   );

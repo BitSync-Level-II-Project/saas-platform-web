@@ -114,16 +114,27 @@ export default function App() {
   );
   const [warehouseSearchTerm, setWarehouseSearchTerm] = useState('');
   const [warehouseStatusFilter, setWarehouseStatusFilter] = useState('All');
+  const [warehousePage, setWarehousePage] = useState(1);
+  const [warehouseLimit] = useState(10);
+  const [warehouseTotal, setWarehouseTotal] = useState(0);
+  const [warehouseTotalPages, setWarehouseTotalPages] = useState(1);
   const [isAddWarehouseModalOpen, setIsAddWarehouseModalOpen] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
 
     warehouseService
-      .getWarehouses(warehouseSearchTerm, warehouseStatusFilter)
+      .getWarehouses(
+        warehouseSearchTerm,
+        warehouseStatusFilter,
+        warehousePage,
+        warehouseLimit,
+      )
       .then((data) => {
         if (!isCancelled) {
-          setWarehouses(data);
+          setWarehouses(data.items);
+          setWarehouseTotal(data.total);
+          setWarehouseTotalPages(data.totalPages);
           setWarehouseError(null);
           setIsLoadingWarehouses(false);
         }
@@ -136,6 +147,8 @@ export default function App() {
               : 'Failed to connect to backend API';
           setWarehouseError(msg);
           setWarehouses([]);
+          setWarehouseTotal(0);
+          setWarehouseTotalPages(1);
           setIsLoadingWarehouses(false);
         }
       });
@@ -143,7 +156,13 @@ export default function App() {
     return () => {
       isCancelled = true;
     };
-  }, [warehouseSearchTerm, warehouseStatusFilter, refreshTrigger]);
+  }, [
+    warehouseSearchTerm,
+    warehouseStatusFilter,
+    warehousePage,
+    warehouseLimit,
+    refreshTrigger,
+  ]);
 
   const triggerRefresh = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -363,9 +382,15 @@ export default function App() {
 
                 <WarehouseFilters
                   searchTerm={warehouseSearchTerm}
-                  onSearchChange={setWarehouseSearchTerm}
+                  onSearchChange={(term) => {
+                    setWarehouseSearchTerm(term);
+                    setWarehousePage(1);
+                  }}
                   statusFilter={warehouseStatusFilter}
-                  onStatusChange={setWarehouseStatusFilter}
+                  onStatusChange={(status) => {
+                    setWarehouseStatusFilter(status);
+                    setWarehousePage(1);
+                  }}
                   onAddClick={() => setIsAddWarehouseModalOpen(true)}
                 />
 
@@ -391,6 +416,11 @@ export default function App() {
                 ) : (
                   <WarehouseTable
                     warehouses={warehouses}
+                    total={warehouseTotal}
+                    currentPage={warehousePage}
+                    totalPages={warehouseTotalPages}
+                    limit={warehouseLimit}
+                    onPageChange={(page) => setWarehousePage(page)}
                     onOpenWarehouse={(warehouse) => setSelectedWarehouse(warehouse)}
                     onDeleteWarehouse={handleDeleteWarehouse}
                   />

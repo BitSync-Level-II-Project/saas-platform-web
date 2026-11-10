@@ -4,6 +4,14 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 const LOCATIONS_STORAGE_KEY = 'sitetrace_locations';
 
+export interface PaginatedWarehousesResponse {
+  items: Warehouse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface CreateWarehouseInput {
   name: string;
   city: string;
@@ -16,7 +24,9 @@ export const warehouseService = {
   getWarehouses: async (
     search?: string,
     status?: string,
-  ): Promise<Warehouse[]> => {
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedWarehousesResponse> => {
     const params = new URLSearchParams();
     if (search && search.trim()) {
       params.append('search', search.trim());
@@ -24,6 +34,8 @@ export const warehouseService = {
     if (status && status !== 'All') {
       params.append('status', status);
     }
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
 
     const queryString = params.toString();
     const url = `${API_BASE_URL}/warehouses${queryString ? `?${queryString}` : ''}`;
@@ -34,7 +46,7 @@ export const warehouseService = {
     }
 
     const data = await response.json();
-    return data.items as Warehouse[];
+    return data as PaginatedWarehousesResponse;
   },
 
   // Register a new warehouse directly to PostgreSQL via POST
