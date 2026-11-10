@@ -12,7 +12,7 @@ export interface CreateWarehouseInput {
 }
 
 export const warehouseService = {
-  // 1. Fetch warehouses directly from PostgreSQL via NestJS API
+  //Fetch warehouses directly from PostgreSQL via NestJS API
   getWarehouses: async (
     search?: string,
     status?: string,
@@ -37,7 +37,7 @@ export const warehouseService = {
     return data.items as Warehouse[];
   },
 
-  // 2. Register a new warehouse directly to PostgreSQL via POST
+  // Register a new warehouse directly to PostgreSQL via POST
   addWarehouse: async (input: CreateWarehouseInput): Promise<Warehouse> => {
     const response = await fetch(`${API_BASE_URL}/warehouses`, {
       method: 'POST',
@@ -61,7 +61,7 @@ export const warehouseService = {
     return (await response.json()) as Warehouse;
   },
 
-  // 3. Delete a warehouse directly from PostgreSQL via DELETE
+  // Delete a warehouse directly from PostgreSQL via DELETE
   deleteWarehouse: async (id: string): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/warehouses/${id}`, {
       method: 'DELETE',
@@ -71,7 +71,7 @@ export const warehouseService = {
     }
   },
 
-  // 4. Update warehouse details or toggle status via PATCH
+  // Update warehouse details or toggle status via PATCH
   updateWarehouse: async (
     id: string,
     data: Partial<Warehouse>,
@@ -87,7 +87,7 @@ export const warehouseService = {
     return (await response.json()) as Warehouse;
   },
 
-  // 5. Locations queries (clean, starts empty until Locations backend phase)
+  //  Locations queries (clean, starts empty until Locations backend phase)
   getLocations: (warehouseId: string): Location[] => {
     const saved = localStorage.getItem(LOCATIONS_STORAGE_KEY);
     if (!saved) return [];
