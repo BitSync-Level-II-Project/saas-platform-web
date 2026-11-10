@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Bell,
   ChartNoAxesColumn,
@@ -23,7 +23,10 @@ import type { Warehouse } from './types';
 // Damith's Template & Collected Data Modules
 import { TemplateTable } from './components/TemplateTable';
 import type { Template } from './components/TemplateTable';
-import { CreateTemplatePage } from './components/CreateTemplatePage';
+import {
+  CreateTemplatePage,
+  type CreateTemplatePageHandle,
+} from './components/CreateTemplatePage';
 import { TemplatePreviewModal } from './components/TemplatePreviewModal';
 import { CollectedDataPage } from './components/collected-data/CollectedDataPage';
 import { sampleCollectedRecords } from './components/collected-data/sampleCollectedRecords';
@@ -72,10 +75,31 @@ const menuItems = [
 ];
 
 export default function App() {
+  const createTemplatePageRef = useRef<CreateTemplatePageHandle>(null);
+
   // Navigation: "warehouses" | "templates" | "create-template" | "collected"
   const [activeTab, setActiveTab] = useState<
     'warehouses' | 'templates' | 'create-template' | 'collected'
   >('warehouses');
+
+  const handleNavigate = (
+    target: 'warehouses' | 'templates' | 'create-template' | 'collected',
+  ) => {
+    if (
+      activeTab === 'create-template' &&
+      target !== 'create-template' &&
+      createTemplatePageRef.current
+    ) {
+      createTemplatePageRef.current.requestLeave(() => {
+        setSelectedWarehouse(null);
+        setActiveTab(target);
+      });
+      return;
+    }
+
+    setSelectedWarehouse(null);
+    setActiveTab(target);
+  };
 
   // -------------------------------------------------------------
   // Deemantha's Warehouse Management State (Live PostgreSQL API)
@@ -267,10 +291,7 @@ export default function App() {
                   type="button"
                   className={`nav-item ${isActive ? 'nav-item--active' : ''}`}
                   aria-current={isActive ? 'page' : undefined}
-                  onClick={() => {
-                    setSelectedWarehouse(null);
-                    setActiveTab(target);
-                  }}
+                  onClick={() => handleNavigate(target)}
                 >
                   <Icon size={17} strokeWidth={1.8} />
                   <span>{item.label}</span>
@@ -461,6 +482,7 @@ export default function App() {
           {/* TAB 3: CREATE TEMPLATE PAGE */}
           {activeTab === 'create-template' && (
             <CreateTemplatePage
+              ref={createTemplatePageRef}
               key={selectedDraft?.id ?? 'new-template'}
               initialDraft={selectedDraft}
               onBack={() => setActiveTab('templates')}

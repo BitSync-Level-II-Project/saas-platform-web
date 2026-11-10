@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import "./CreateTemplatePage.css";
 import { FieldToolbox } from "./FieldToolbox";
 import { validateTemplate } from "./validateTemplate";
@@ -16,16 +16,22 @@ import { TemplatePreviewModal } from "./TemplatePreviewModal";
 import { saveTemplateDraft } from "./templateDraftStorage";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
+export interface CreateTemplatePageHandle {
+  requestLeave: (onProceed: () => void) => void;
+}
+
 type CreateTemplatePageProps = {
   onBack: () => void;
   initialDraft: SavedTemplateDraft | null;
   onSaved: () => void;
 };
-export function CreateTemplatePage({
-  onBack,
-  initialDraft,
-  onSaved,
-}: CreateTemplatePageProps) {
+export const CreateTemplatePage = forwardRef<
+  CreateTemplatePageHandle,
+  CreateTemplatePageProps
+>(function CreateTemplatePage(
+  { onBack, initialDraft, onSaved }: CreateTemplatePageProps,
+  ref,
+) {
   const [draftId] = useState(() => initialDraft?.id ?? crypto.randomUUID());
 
   const [details, setDetails] = useState<TemplateDetails>(
@@ -54,7 +60,19 @@ export function CreateTemplatePage({
     JSON.stringify({ details, fields }),
   );
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const [pendingLeaveAction, setPendingLeaveAction] = useState<(() => void) | null>(null);
   const isDirty = JSON.stringify({ details, fields }) !== initialSnapshot;
+
+  useImperativeHandle(ref, () => ({
+    requestLeave(onProceed: () => void) {
+      if (isDirty) {
+        setPendingLeaveAction(() => onProceed);
+        setIsLeaveDialogOpen(true);
+      } else {
+        onProceed();
+      }
+    },
+  }));
 
   useEffect(() => {
     if (!isDirty) {
@@ -75,6 +93,7 @@ export function CreateTemplatePage({
 
   function handleBack() {
     if (isDirty) {
+      setPendingLeaveAction(() => onBack);
       setIsLeaveDialogOpen(true);
       return;
     }
@@ -394,11 +413,26 @@ export function CreateTemplatePage({
 
       {isLeaveDialogOpen && (
         <UnsavedChangesDialog
-          onStay={() => setIsLeaveDialogOpen(false)}
-          onDiscard={onBack}
+          onStay={() => {
+            setIsLeaveDialogOpen(false);
+            setPendingLeaveAction(null);
+          }}
+          onDiscard={() => {
+            setIsLeaveDialogOpen(false);
+            if (pendingLeaveAction) {
+              pendingLeaveAction();
+              setPendingLeaveAction(null);
+            } else {
+              onBack();
+            }
+          }}
           onSave={() => {
             setIsLeaveDialogOpen(false);
             handleSaveDraft();
+            if (pendingLeaveAction) {
+              pendingLeaveAction();
+              setPendingLeaveAction(null);
+            }
           }}
         />
       )}
@@ -413,4 +447,4 @@ export function CreateTemplatePage({
       )}
     </section>
   );
-}
+});
