@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./CreateTemplatePage.css";
 import { FieldToolbox } from "./FieldToolbox";
 import { validateTemplate } from "./validateTemplate";
@@ -13,21 +13,24 @@ import type {
 import { FormCanvas } from "./FormCanvas";
 import { FieldSettingsPanel } from "./FieldSettingsPanel";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
-import { saveTemplateDraft } from "./templateDraftStorage";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
-
+import { ConfirmPublishDialog } from "./ConfirmPublishDialog";
 type CreateTemplatePageProps = {
   onBack: () => void;
   initialDraft: SavedTemplateDraft | null;
   onSaved: () => void;
+  onPersist: (
+    details: TemplateDetails,
+    fields: TemplateField[],
+    mode: "draft" | "publish",
+  ) => Promise<void>;
 };
 export function CreateTemplatePage({
   onBack,
   initialDraft,
   onSaved,
+  onPersist,
 }: CreateTemplatePageProps) {
-  const [draftId] = useState(() => initialDraft?.id ?? crypto.randomUUID());
-
   const [details, setDetails] = useState<TemplateDetails>(
     () =>
       initialDraft?.details ?? {
@@ -50,9 +53,7 @@ export function CreateTemplatePage({
     () => initialDraft?.fields ?? [],
   );
 
-  const [initialSnapshot] = useState(() =>
-    JSON.stringify({ details, fields }),
-  );
+  const [initialSnapshot] = useState(() => JSON.stringify({ details, fields }));
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const isDirty = JSON.stringify({ details, fields }) !== initialSnapshot;
 
@@ -82,8 +83,10 @@ export function CreateTemplatePage({
     onBack();
   }
 
-  const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const saveLock = useRef(false);
+  const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [hasCheckedTemplate, setHasCheckedTemplate] = useState(false);
 
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
@@ -161,36 +164,48 @@ export function CreateTemplatePage({
 
   const selectedField = fields.find((field) => field.id === selectedFieldId);
 
-  function handleSaveDraft() {
-    setSaveMessage("");
+  async function persist(mode: "draft" | "publish"): Promise<boolean> {
+    if (saveLock.current) return false;
     setSaveError("");
 
     if (details.name.trim() === "") {
       setSaveError("Enter a template name before saving your draft.");
-      return;
+      return false;
     }
+
+    if (mode === "publish" && validateTemplate(details, fields).length > 0) {
+      setHasCheckedTemplate(true);
+      return false;
+    }
+
+    saveLock.current = true;
+    setIsSaving(true);
 
     try {
-      saveTemplateDraft({
-        id: draftId,
-        schemaVersion: 1,
-        status: "draft",
-        details: {
-          ...details,
-          name: details.name.trim(),
-        },
-        fields,
-        savedAt: new Date().toISOString(),
-      });
-
-      onSaved();
-    } catch {
-      setSaveError("Your draft could not be saved. Please try again.");
+      await onPersist({ ...details, name: details.name.trim() }, fields, mode);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Your template could not be saved. Please try again.",
+      );
+      return false;
+    } finally {
+      saveLock.current = false;
+      setIsSaving(false);
     }
+
+    onSaved();
+    return true;
   }
+
+  async function handleSaveDraft() {
+    return persist("draft");
+  }
+
   function handlePublish() {
+    if (saveLock.current) return;
     setHasCheckedTemplate(true);
-    setSaveMessage("");
     setSaveError("");
 
     const errors = validateTemplate(details, fields);
@@ -199,218 +214,214 @@ export function CreateTemplatePage({
       return;
     }
 
-    const publishedAt = new Date().toISOString();
-
-    try {
-      saveTemplateDraft({
-        id: draftId,
-        schemaVersion: 1,
-        status: "published",
-        version: 1,
-        publishedAt,
-        savedAt: publishedAt,
-        details: {
-          ...details,
-          name: details.name.trim(),
-        },
-        fields,
-      });
-
-      onSaved();
-    } catch {
-      setSaveError("The template could not be published. Please try again.");
-    }
+    setIsPublishConfirmOpen(true);
   }
   const validationErrors = validateTemplate(details, fields);
   return (
-    <section className="template-builder">
-      <button className="template-builder__back" type="button" onClick={handleBack}>
-        ← Templates
-      </button>
+    <section className="template-builder" aria-busy={isSaving}>
+      {isSaving && (
+        <p className="tm-notice" role="status">
+          Saving your template…
+        </p>
+      )}
+      <fieldset className="tm-editor-lock" disabled={isSaving}>
+        <button
+          className="template-builder__back"
+          type="button"
+          onClick={handleBack}
+        >
+          ← Templates
+        </button>
 
-      <div className="template-builder__heading">
-        <h1>Create template</h1>
+        <div className="template-builder__heading">
+          <h1>Create template</h1>
 
-        <span className="template-builder__draft">Draft</span>
-        {isDirty && (
-          <span className="template-builder__unsaved" role="status">
-            Unsaved changes
-          </span>
+          <span className="template-builder__draft">Draft</span>
+          {isDirty && (
+            <span className="template-builder__unsaved" role="status">
+              Unsaved changes
+            </span>
+          )}
+
+          <div className="template-builder__actions">
+            <button
+              type="button"
+              className="template-builder__save-button"
+              onClick={() => void handleSaveDraft()}
+            >
+              Save draft
+            </button>
+
+            <button
+              type="button"
+              className="template-builder__preview-button"
+              onClick={() => setIsPreviewOpen(true)}
+            >
+              Preview
+            </button>
+            <button
+              type="button"
+              className="template-builder__publish-button"
+              onClick={handlePublish}
+            >
+              Publish template
+            </button>
+          </div>
+        </div>
+
+        <p className="template-builder__subtitle">
+          Build a reusable form for receiving, storage, picking or dispatch.
+        </p>
+
+        {saveError && (
+          <p className="template-builder__save-error" role="alert">
+            {saveError}
+          </p>
         )}
 
-        <div className="template-builder__actions">
-          <button
-            type="button"
-            className="template-builder__save-button"
-            onClick={handleSaveDraft}
-          >
-            Save draft
-          </button>
+        <section
+          className="template-builder__details"
+          aria-labelledby="template-details-title"
+        >
+          <h2 id="template-details-title">Template details</h2>
 
-          <button
-            type="button"
-            className="template-builder__preview-button"
-            onClick={() => setIsPreviewOpen(true)}
+          <div className="template-builder__grid">
+            <label>
+              Template name *
+              <input
+                value={details.name}
+                onChange={(event) =>
+                  updateDetail("name", event.currentTarget.value)
+                }
+                placeholder="e.g. Goods Receiving Inspection"
+                required
+              />
+            </label>
+
+            <label>
+              Industry
+              <select
+                value={details.industry}
+                onChange={(event) =>
+                  updateDetail("industry", event.currentTarget.value)
+                }
+              >
+                <option value="">Select Industry</option>
+                <option value="warehouse">Warehouse</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="logistics">Logistics</option>
+              </select>
+            </label>
+
+            <label>
+              Process
+              <select
+                value={details.process}
+                onChange={(event) =>
+                  updateDetail("process", event.currentTarget.value)
+                }
+              >
+                <option value="">Select process</option>
+                <option value="receiving">Goods Receiving</option>
+                <option value="storage">Storage</option>
+                <option value="picking">Picking</option>
+                <option value="dispatch">Dispatch</option>
+              </select>
+            </label>
+
+            <label>
+              Applicable warehouses
+              <select
+                value={details.warehouse}
+                onChange={(event) =>
+                  updateDetail("warehouse", event.currentTarget.value)
+                }
+              >
+                <option value="">Select warehouse</option>
+                <option value="all">All warehouses</option>
+                <option value="colombo">Colombo warehouse</option>
+                <option value="galle">Galle warehouse</option>
+              </select>
+            </label>
+
+            <label className="template-builder__full-width">
+              Description
+              <textarea
+                value={details.description}
+                onChange={(event) =>
+                  updateDetail("description", event.currentTarget.value)
+                }
+                placeholder="Describe what this form collects."
+                rows={3}
+              />
+            </label>
+          </div>
+        </section>
+        {hasCheckedTemplate && validationErrors.length > 0 && (
+          <section
+            className="template-builder__validation template-builder__validation--error"
+            aria-labelledby="template-validation-title"
+            aria-live="polite"
+            aria-atomic="true"
           >
-            Preview
-          </button>
-          <button
-            type="button"
-            className="template-builder__publish-button"
-            onClick={handlePublish}
-          >
-            Publish template
-          </button>
+            <h2 id="template-validation-title">
+              Fix these items before publishing
+            </h2>
+
+            <ul>
+              {validationErrors.map((message, index) => (
+                <li key={`${index}-${message}`}>{message}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <div className="template-builder__workspace">
+          <FieldToolbox onAddField={addField} />
+
+          <FormCanvas
+            fields={fields}
+            selectedFieldId={selectedFieldId}
+            onSelectField={setSelectedFieldId}
+            onDeleteField={deleteField}
+            onMoveField={moveField}
+          />
+
+          <FieldSettingsPanel
+            field={selectedField}
+            onUpdateField={updateField}
+          />
         </div>
-      </div>
 
-      <p className="template-builder__subtitle">
-        Build a reusable form for receiving, storage, picking or dispatch.
-      </p>
+        {isLeaveDialogOpen && (
+          <UnsavedChangesDialog
+            onStay={() => setIsLeaveDialogOpen(false)}
+            onDiscard={onBack}
+            onSave={() => {
+              setIsLeaveDialogOpen(false);
+              void handleSaveDraft();
+            }}
+          />
+        )}
 
-      {saveMessage && (
-        <p className="template-builder__save-success" role="status">
-          {saveMessage}
-        </p>
-      )}
-
-      {saveError && (
-        <p className="template-builder__save-error" role="alert">
-          {saveError}
-        </p>
-      )}
-
-      <section
-        className="template-builder__details"
-        aria-labelledby="template-details-title"
-      >
-        <h2 id="template-details-title">Template details</h2>
-
-        <div className="template-builder__grid">
-          <label>
-            Template name *
-            <input
-              value={details.name}
-              onChange={(event) =>
-                updateDetail("name", event.currentTarget.value)
-              }
-              placeholder="e.g. Goods Receiving Inspection"
-              required
-            />
-          </label>
-
-          <label>
-            Industry
-            <select
-              value={details.industry}
-              onChange={(event) =>
-                updateDetail("industry", event.currentTarget.value)
-              }
-            >
-              <option value="">Select Industry</option>
-              <option value="warehouse">Warehouse</option>
-              <option value="manufacturing">Manufacturing</option>
-              <option value="logistics">Logistics</option>
-            </select>
-          </label>
-
-          <label>
-            Process
-            <select
-              value={details.process}
-              onChange={(event) =>
-                updateDetail("process", event.currentTarget.value)
-              }
-            >
-              <option value="">Select process</option>
-              <option value="receiving">Goods Receiving</option>
-              <option value="storage">Storage</option>
-              <option value="picking">Picking</option>
-              <option value="dispatch">Dispatch</option>
-            </select>
-          </label>
-
-          <label>
-            Applicable warehouses
-            <select
-              value={details.warehouse}
-              onChange={(event) =>
-                updateDetail("warehouse", event.currentTarget.value)
-              }
-            >
-              <option value="">Select warehouse</option>
-              <option value="all">All warehouses</option>
-              <option value="colombo">Colombo warehouse</option>
-              <option value="galle">Galle warehouse</option>
-            </select>
-          </label>
-
-          <label className="template-builder__full-width">
-            Description
-            <textarea
-              value={details.description}
-              onChange={(event) =>
-                updateDetail("description", event.currentTarget.value)
-              }
-              placeholder="Describe what this form collects."
-              rows={3}
-            />
-          </label>
-        </div>
-      </section>
-      {hasCheckedTemplate && validationErrors.length > 0 && (
-  <section
-    className="template-builder__validation template-builder__validation--error"
-    aria-labelledby="template-validation-title"
-    aria-live="polite"
-    aria-atomic="true"
-  >
-    <h2 id="template-validation-title">
-      Fix these items before publishing
-    </h2>
-
-    <ul>
-      {validationErrors.map((message, index) => (
-        <li key={`${index}-${message}`}>
-          {message}
-        </li>
-      ))}
-    </ul>
-  </section>
-)}
-      <div className="template-builder__workspace">
-        <FieldToolbox onAddField={addField} />
-
-        <FormCanvas
-          fields={fields}
-          selectedFieldId={selectedFieldId}
-          onSelectField={setSelectedFieldId}
-          onDeleteField={deleteField}
-          onMoveField={moveField}
-        />
-
-        <FieldSettingsPanel field={selectedField} onUpdateField={updateField} />
-      </div>
-
-      {isLeaveDialogOpen && (
-        <UnsavedChangesDialog
-          onStay={() => setIsLeaveDialogOpen(false)}
-          onDiscard={onBack}
-          onSave={() => {
-            setIsLeaveDialogOpen(false);
-            handleSaveDraft();
-          }}
-        />
-      )}
-
-      {isPreviewOpen && (
-        <TemplatePreviewModal
-          title={details.name}
-          description={details.description}
-          fields={fields}
-          onClose={() => setIsPreviewOpen(false)}
-        />
-      )}
+        {isPreviewOpen && (
+          <TemplatePreviewModal
+            title={details.name}
+            description={details.description}
+            fields={fields}
+            onClose={() => setIsPreviewOpen(false)}
+          />
+        )}
+        {isPublishConfirmOpen && (
+          <ConfirmPublishDialog
+            name={details.name}
+            onCancel={() => setIsPublishConfirmOpen(false)}
+            onConfirm={() => {
+              setIsPublishConfirmOpen(false);
+              void persist("publish");
+            }}
+          />
+        )}
+      </fieldset>
     </section>
   );
 }
