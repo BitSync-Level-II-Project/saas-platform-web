@@ -15,6 +15,7 @@ import { FieldSettingsPanel } from "./FieldSettingsPanel";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 import { ConfirmPublishDialog } from "./ConfirmPublishDialog";
+
 type CreateTemplatePageProps = {
   onBack: () => void;
   initialDraft: SavedTemplateDraft | null;
@@ -25,6 +26,7 @@ type CreateTemplatePageProps = {
     mode: "draft" | "publish",
   ) => Promise<void>;
 };
+
 export function CreateTemplatePage({
   onBack,
   initialDraft,
@@ -183,6 +185,7 @@ export function CreateTemplatePage({
 
     try {
       await onPersist({ ...details, name: details.name.trim() }, fields, mode);
+      return true;
     } catch (error) {
       setSaveError(
         error instanceof Error
@@ -194,13 +197,13 @@ export function CreateTemplatePage({
       saveLock.current = false;
       setIsSaving(false);
     }
-
-    onSaved();
-    return true;
   }
 
   async function handleSaveDraft() {
-    return persist("draft");
+    const success = await persist("draft");
+    if (success) {
+      onSaved();
+    }
   }
 
   function handlePublish() {
@@ -216,7 +219,9 @@ export function CreateTemplatePage({
 
     setIsPublishConfirmOpen(true);
   }
+
   const validationErrors = validateTemplate(details, fields);
+
   return (
     <section className="template-builder" aria-busy={isSaving}>
       {isSaving && (
@@ -259,17 +264,18 @@ export function CreateTemplatePage({
             >
               Preview
             </button>
+
             <button
               type="button"
               className="template-builder__publish-button"
               onClick={handlePublish}
             >
-              Publish template
+              Publish
             </button>
           </div>
         </div>
 
-        <p className="template-builder__subtitle">
+        <p className="template-builder__description">
           Build a reusable form for receiving, storage, picking or dispatch.
         </p>
 
@@ -357,6 +363,7 @@ export function CreateTemplatePage({
             </label>
           </div>
         </section>
+
         {hasCheckedTemplate && validationErrors.length > 0 && (
           <section
             className="template-builder__validation template-builder__validation--error"
@@ -375,6 +382,7 @@ export function CreateTemplatePage({
             </ul>
           </section>
         )}
+
         <div className="template-builder__workspace">
           <FieldToolbox onAddField={addField} />
 
@@ -396,9 +404,12 @@ export function CreateTemplatePage({
           <UnsavedChangesDialog
             onStay={() => setIsLeaveDialogOpen(false)}
             onDiscard={onBack}
-            onSave={() => {
+            onSave={async () => {
+              const success = await persist("draft");
               setIsLeaveDialogOpen(false);
-              void handleSaveDraft();
+              if (success) {
+                onSaved();
+              }
             }}
           />
         )}
@@ -411,6 +422,7 @@ export function CreateTemplatePage({
             onClose={() => setIsPreviewOpen(false)}
           />
         )}
+
         {isPublishConfirmOpen && (
           <ConfirmPublishDialog
             name={details.name}
