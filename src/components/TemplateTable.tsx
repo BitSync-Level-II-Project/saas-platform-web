@@ -13,12 +13,14 @@ type TemplateTableProps = {
   templates: Template[];
   onContinue: (draftId: string) => void;
   onView: (templateId: string) => void;
+  busy?: boolean;
 };
 
 export function TemplateTable({
   templates,
   onContinue,
   onView,
+  busy = false,
 }: TemplateTableProps) {
   return (
     <div className="table-card">
@@ -52,7 +54,9 @@ export function TemplateTable({
                   <button
                     className="text-action"
                     type="button"
-                    disabled={!template.canContinue && !template.canView}
+                    disabled={
+                      busy || (!template.canContinue && !template.canView)
+                    }
                     title={
                       template.canView
                         ? "View published template"

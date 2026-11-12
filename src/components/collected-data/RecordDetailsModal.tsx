@@ -1,101 +1,73 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from "react";
 
 import {
   reviewLabels,
   type CollectedRecordSummary,
-} from './collectedDataTypes'
+  type ReviewStatus,
+} from "./collectedDataTypes";
 
-import './RecordDetailsModal.css'
+import "./RecordDetailsModal.css";
+import { RecordReviewPanel } from "./RecordReviewPanel";
 
 type RecordDetailsModalProps = {
-  record: CollectedRecordSummary
-  onClose: () => void
-}
+  record: CollectedRecordSummary;
+  onClose: () => void;
+  onReview: (id: string, status: ReviewStatus, note: string) => Promise<void>;
+};
 
-const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: 'Asia/Colombo',
-})
+const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Asia/Colombo",
+});
 
-function EvidenceImage({
-  url,
-  label,
-}: {
-  url: string
-  label: string
-}) {
-  const [hasError, setHasError] = useState(false)
+function EvidenceImage({ url, label }: { url: string; label: string }) {
+  const [hasError, setHasError] = useState(false);
 
   if (hasError) {
-    return (
-      <p role="status">
-        This evidence image could not be loaded.
-      </p>
-    )
+    return <p role="status">This evidence image could not be loaded.</p>;
   }
 
-  return (
-    <img
-      src={url}
-      alt={label}
-      onError={() => setHasError(true)}
-    />
-  )
+  return <img src={url} alt={label} onError={() => setHasError(true)} />;
 }
 
 export function RecordDetailsModal({
   record,
   onClose,
+  onReview,
 }: RecordDetailsModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const [evidenceId, setEvidenceId] = useState(
     record.evidence?.[0]?.id ?? null,
-  )
+  );
 
   useEffect(() => {
-    const dialog = dialogRef.current
+    const dialog = dialogRef.current;
 
     if (!dialog) {
-      return
+      return;
     }
 
-    dialog.showModal()
+    dialog.showModal();
 
-    return () => dialog.close()
-  }, [])
+    return () => dialog.close();
+  }, []);
 
-  const evidence = record.evidence ?? []
+  const evidence = record.evidence ?? [];
 
-  const selectedEvidence = evidence.find(
-    (item) => item.id === evidenceId,
-  )
+  const selectedEvidence = evidence.find((item) => item.id === evidenceId);
 
   const metadata = [
-    ['Task', record.taskId],
-    [
-      'Template',
-      `${record.templateName} · v${record.templateVersion}`,
-    ],
-    ['Warehouse', record.warehouse],
-    ['Location', record.location],
-    ['Submitted by', record.submittedBy],
-    [
-      'Source',
-      record.source === 'worker'
-        ? 'Worker phone'
-        : 'Stationed phone',
-    ],
-    [
-      'Submitted',
-      timeFormatter.format(new Date(record.submittedAt)),
-    ],
-    [
-      'Received',
-      timeFormatter.format(new Date(record.receivedAt)),
-    ],
-  ]
+    ["Task", record.taskId],
+    ["Template", `${record.templateName} · v${record.templateVersion}`],
+    ["Warehouse", record.warehouse],
+    ["Location", record.location],
+    ["Submitted by", record.submittedBy],
+    ["Source", record.source === "worker" ? "Worker phone" : "Stationed phone"],
+    ["Submitted", timeFormatter.format(new Date(record.submittedAt))],
+    ["Received", timeFormatter.format(new Date(record.receivedAt))],
+  ];
 
   return (
     <dialog
@@ -103,15 +75,13 @@ export function RecordDetailsModal({
       className="record-details"
       aria-labelledby="record-details-title"
       onCancel={(event) => {
-        event.preventDefault()
-        onClose()
+        event.preventDefault();
+        onClose();
       }}
     >
       <header className="record-details__header">
         <div>
-          <h2 id="record-details-title">
-            {record.templateName}
-          </h2>
+          <h2 id="record-details-title">{record.templateName}</h2>
 
           <p>
             {record.id} · {reviewLabels[record.reviewStatus]}
@@ -139,9 +109,7 @@ export function RecordDetailsModal({
           ))}
         </dl>
 
-        <p className="record-details__note">
-          Times shown in Asia/Colombo.
-        </p>
+        <p className="record-details__note">Times shown in Asia/Colombo.</p>
       </section>
 
       <section aria-labelledby="record-answers-title">
@@ -162,9 +130,7 @@ export function RecordDetailsModal({
       </section>
 
       <section aria-labelledby="record-evidence-title">
-        <h3 id="record-evidence-title">
-          Evidence ({evidence.length})
-        </h3>
+        <h3 id="record-evidence-title">Evidence ({evidence.length})</h3>
 
         {evidence.length === 0 ? (
           <p>No evidence attached.</p>
@@ -191,14 +157,17 @@ export function RecordDetailsModal({
                   label={selectedEvidence.label}
                 />
 
-                <figcaption>
-                  {selectedEvidence.label}
-                </figcaption>
+                <figcaption>{selectedEvidence.label}</figcaption>
               </figure>
             )}
           </>
         )}
       </section>
+
+      <RecordReviewPanel
+        record={record}
+        onReview={(status, note) => onReview(record.id, status, note)}
+      />
 
       <footer className="record-details__footer">
         <button type="button" onClick={onClose}>
@@ -206,5 +175,5 @@ export function RecordDetailsModal({
         </button>
       </footer>
     </dialog>
-  )
+  );
 }
