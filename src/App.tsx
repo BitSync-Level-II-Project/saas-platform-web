@@ -1,75 +1,132 @@
-import { useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import { useState } from "react";
 import {
-  Bell, Building2, ChartNoAxesColumn, ClipboardList, FileText, History, House, LogOut, User,
-} from 'lucide-react';
-import './App.css';
-import { OverviewPage } from './components/OverviewPage';
-import { SupervisorsPage } from './components/SupervisorsPage';
-import { TaskManagementPage } from './components/TaskManagementPage';
-import { CreateTaskPage } from './components/CreateTaskPage';
-import { TaskDetailsPage } from './components/TaskDetailsPage';
-import { initialTasks } from './components/taskTypes';
-import type { NewTask, Task, TaskStatus } from './components/taskTypes';
-import { initialSupervisors } from './components/supervisorTypes';
-import type { NewSupervisor, Supervisor } from './components/supervisorTypes';
-import { initialSubmissions } from './components/submissionTypes';
-import type { Submission } from './components/submissionTypes';
-import { ReviewContext } from './components/reviewContext';
-import type { ReviewEvent } from './components/reviewContext';
-import siteTraceLogo from './assets/SiteTrace-logo.svg';
+  Bell,
+  ChartNoAxesColumn,
+  ClipboardList,
+  FileText,
+  House,
+  LogOut,
+  UsersRound,
+  Warehouse,
+} from "lucide-react";
+import "./App.css";
+import "./TaskModule.css";
+import siteTraceLogo from "./assets/SiteTrace-logo.svg";
+import { TemplatesModule } from "./components/TemplateModule";
+import { CollectedDataPage } from "./components/collected-data/CollectedDataPage";
+import { sampleCollectedRecords } from "./components/collected-data/sampleCollectedRecords";
+import type { ReviewStatus } from "./components/collected-data/collectedDataTypes";
+import "./ModuleCompletion.css";
 
-type Section = 'overview' | 'supervisors' | 'list';
-type View = { name: Section } | { name: 'create' } | { name: 'details'; id: string };
+import { OverviewPage } from "./components/OverviewPage";
+import { SupervisorsPage } from "./components/SupervisorsPage";
+import { TaskManagementPage } from "./components/TaskManagementPage";
+import { CreateTaskPage } from "./components/CreateTaskPage";
+import { TaskDetailsPage } from "./components/TaskDetailsPage";
+import { initialTasks } from "./components/taskTypes";
+import type { NewTask, Task, TaskStatus } from "./components/taskTypes";
+import { initialSupervisors } from "./components/supervisorTypes";
+import type { NewSupervisor, Supervisor } from "./components/supervisorTypes";
+import { initialSubmissions } from "./components/submissionTypes";
+import type { Submission } from "./components/submissionTypes";
+import { ReviewContext } from "./components/reviewContext";
+import type { ReviewEvent } from "./components/reviewContext";
 
-// Pages without a section belong to other members' modules.
-const NAV: { label: string; icon: LucideIcon; section?: Section }[] = [
-  { label: 'Overview', icon: House, section: 'overview' },
-  { label: 'Supervisors', icon: User, section: 'supervisors' },
-  { label: 'Warehouses', icon: Building2 },
-  { label: 'Templates', icon: FileText },
-  { label: 'Tasks', icon: ClipboardList, section: 'list' },
-  { label: 'Collected data', icon: ChartNoAxesColumn },
-  { label: 'Alerts', icon: Bell },
-  { label: 'Audit log', icon: History },
+type Page =
+  | "overview"
+  | "supervisors"
+  | "templates"
+  | "tasks"
+  | "create"
+  | "details"
+  | "collected";
+
+const menuItems = [
+  { label: "Overview", icon: House },
+  { label: "Supervisors", icon: UsersRound },
+  { label: "Warehouses", icon: Warehouse },
+  { label: "Templates", icon: FileText },
+  { label: "Tasks", icon: ClipboardList },
+  { label: "Collected data", icon: ChartNoAxesColumn },
+  { label: "Alerts", icon: Bell },
 ];
 
+// Menu items that open a page. The others belong to other modules.
+const PAGE_OF: Record<string, Page> = {
+  Overview: "overview",
+  Supervisors: "supervisors",
+  Templates: "templates",
+  Tasks: "tasks",
+  "Collected data": "collected",
+};
+
 function App() {
-  const [view, setView] = useState<View>({ name: 'overview' });
+  const [page, setPage] = useState<Page>("templates");
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [isTemplateEditing, setIsTemplateEditing] = useState(false);
+
+  // Collected data module (another member)
+  const [records, setRecords] = useState(sampleCollectedRecords);
+
+  // Task module (M4)
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [supervisors, setSupervisors] = useState<Supervisor[]>(initialSupervisors);
   const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
   const [history, setHistory] = useState<Record<string, ReviewEvent[]>>(() =>
     Object.fromEntries(
       initialSubmissions
-        .filter((s) => s.status !== 'Pending')
+        .filter((s) => s.status !== "Pending")
         .map((s) => [
           s.id,
-          [{ at: s.submittedAt, by: 'Dinesh', action: s.status as 'Approved' | 'Rejected', note: s.reviewNote }],
-        ])
-    )
+          [
+            {
+              at: s.submittedAt,
+              by: "Dinesh",
+              action: s.status as "Approved" | "Rejected",
+              note: s.reviewNote,
+            },
+          ],
+        ]),
+    ),
   );
-  const [signedOut, setSignedOut] = useState(false);
 
-  const goList = () => setView({ name: 'list' });
-  const activeSection: Section =
-    view.name === 'create' || view.name === 'details' ? 'list' : view.name;
-  const activeSupervisorNames = supervisors.filter((s) => s.status === 'Active').map((s) => s.name);
+  async function reviewRecord(
+    id: string,
+    reviewStatus: ReviewStatus,
+    reviewNote: string,
+  ): Promise<void> {
+    const reviewedAt = new Date().toISOString();
+    setRecords((current) =>
+      current.map((record) =>
+        record.id === id
+          ? { ...record, reviewStatus, reviewNote, reviewedAt }
+          : record,
+      ),
+    );
+  }
+
+  const goTasks = () => setPage("tasks");
+  const activeSupervisorNames = supervisors
+    .filter((s) => s.status === "Active")
+    .map((s) => s.name);
 
   const createTask = (data: NewTask) => {
     setTasks((prev) => {
-      const last = prev.reduce((max, t) => Math.max(max, Number(t.code.replace('TSK-', ''))), 1000);
+      const last = prev.reduce(
+        (max, t) => Math.max(max, Number(t.code.replace("TSK-", ""))),
+        1000,
+      );
       const task: Task = {
         ...data,
         id: crypto.randomUUID(),
         code: `TSK-${last + 1}`,
-        status: 'Assigned',
+        status: "Assigned",
         assigneeType: null,
         assignee: null,
       };
       return [task, ...prev];
     });
-    setView({ name: 'list' });
+    goTasks();
   };
 
   const updateTask = (id: string, patch: Partial<Task>) =>
@@ -77,33 +134,44 @@ function App() {
 
   const deleteTask = (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    goList();
+    goTasks();
   };
 
   const registerSupervisor = (data: NewSupervisor) =>
     setSupervisors((prev) => [
       ...prev,
-      { ...data, id: crypto.randomUUID(), status: 'Pending', activationSent: false },
+      { ...data, id: crypto.randomUUID(), status: "Pending", activationSent: false },
     ]);
 
   const sendActivation = (id: string) =>
-    setSupervisors((prev) => prev.map((s) => (s.id === id ? { ...s, activationSent: true } : s)));
+    setSupervisors((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, activationSent: true } : s)),
+    );
 
-  const addEvent = (id: string, action: ReviewEvent['action'], note: string) =>
+  const addEvent = (id: string, action: ReviewEvent["action"], note: string) =>
     setHistory((prev) => ({
       ...prev,
-      [id]: [...(prev[id] ?? []), { at: new Date().toLocaleString(), by: 'Dinesh', action, note }],
+      [id]: [
+        ...(prev[id] ?? []),
+        { at: new Date().toLocaleString(), by: "Dinesh", action, note },
+      ],
     }));
 
   // Approve completes the task; reject sends it back to the worker.
-  const reviewSubmission = (id: string, decision: 'Approved' | 'Rejected', note: string) => {
+  const reviewSubmission = (
+    id: string,
+    decision: "Approved" | "Rejected",
+    note: string,
+  ) => {
     const sub = submissions.find((s) => s.id === id);
     if (!sub) return;
-    const taskStatus: TaskStatus = decision === 'Approved' ? 'Complete' : 'In progress';
+    const taskStatus: TaskStatus = decision === "Approved" ? "Complete" : "In progress";
     setSubmissions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: decision, reviewNote: note } : s))
+      prev.map((s) => (s.id === id ? { ...s, status: decision, reviewNote: note } : s)),
     );
-    setTasks((prev) => prev.map((t) => (t.code === sub.taskCode ? { ...t, status: taskStatus } : t)));
+    setTasks((prev) =>
+      prev.map((t) => (t.code === sub.taskCode ? { ...t, status: taskStatus } : t)),
+    );
     addEvent(id, decision, note);
   };
 
@@ -114,114 +182,145 @@ function App() {
     setTasks((prev) =>
       prev.map((t) =>
         t.code === sub.taskCode
-          ? { ...t, assigneeType: 'Worker', assignee: worker, status: 'Assigned' }
-          : t
-      )
+          ? { ...t, assigneeType: "Worker", assignee: worker, status: "Assigned" }
+          : t,
+      ),
     );
-    addEvent(id, 'Reassigned', `Reassigned to ${worker}`);
+    addEvent(id, "Reassigned", `Reassigned to ${worker}`);
   };
 
-  const current = view.name === 'details' ? tasks.find((t) => t.id === view.id) : undefined;
-
-  // Mock sign-out. Real authentication belongs to the identity module.
-  if (signedOut) {
-    return (
-      <div className="signed-out">
-        <img src={siteTraceLogo} alt="SiteTrace" />
-        <h1>You have signed out</h1>
-        <p className="muted">Sign in again to continue.</p>
-        <button type="button" className="primary-btn" onClick={() => { setSignedOut(false); setView({ name: 'overview' }); }}>
-          Sign in
-        </button>
-      </div>
-    );
-  }
+  const current = page === "details" ? tasks.find((t) => t.id === taskId) : undefined;
+  const activePage: Page = page === "create" || page === "details" ? "tasks" : page;
+  const isM4Page =
+    page === "overview" ||
+    page === "supervisors" ||
+    page === "tasks" ||
+    page === "create" ||
+    page === "details";
 
   return (
     <ReviewContext.Provider value={{ history, reassign: reassignSubmission }}>
-      <div className="app-container">
+      <div className="manager-layout">
         <aside className="sidebar">
-          <div className="sidebar-logo">
-            <img src={siteTraceLogo} alt="SiteTrace" />
+          <div className="brand">
+            <img className="brand-logo" src={siteTraceLogo} alt="SiteTrace" />
           </div>
-          <div className="org-card">
+
+          <div className="organization-card">
             <strong>Nova Industries</strong>
-            <span>Manager</span>
+            <small>Manager</small>
           </div>
-          <nav className="sidebar-nav">
-            {NAV.map(({ label, icon: Icon, section }) => (
-              <button
-                key={label}
-                type="button"
-                className={`nav-item ${section && section === activeSection ? 'active' : ''}`}
-                disabled={!section}
-                onClick={() => section && setView({ name: section })}
-              >
-                <Icon size={20} />
-                <span>{label}</span>
-              </button>
-            ))}
+
+          <nav className="sidebar-nav" aria-label="Manager navigation">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const target = PAGE_OF[item.label];
+
+              if (target) {
+                const isActive = activePage === target;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className={`nav-item ${isActive ? "nav-item--active" : ""}`}
+                    aria-current={isActive ? "page" : undefined}
+                    disabled={isTemplateEditing}
+                    onClick={() => setPage(target)}
+                  >
+                    <Icon size={17} strokeWidth={1.8} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              }
+
+              return (
+                <div className="nav-item" key={item.label}>
+                  <Icon size={17} strokeWidth={1.8} />
+                  <span>{item.label}</span>
+                </div>
+              );
+            })}
           </nav>
 
           <div className="sidebar-footer">
             <div className="profile">
-              <div className="avatar small">DW</div>
+              <span className="avatar avatar--small">DW</span>
               <div>
                 <strong>Dinesh</strong>
-                <span>My profile</span>
+                <small>My profile</small>
               </div>
             </div>
-            <button type="button" className="nav-item signout" onClick={() => setSignedOut(true)}>
-              <LogOut size={20} />
+
+            <div className="nav-item sign-out">
+              <LogOut size={17} strokeWidth={1.8} />
               <span>Sign out</span>
-            </button>
+            </div>
           </div>
         </aside>
 
-        <div className="main-area">
+        <div className="page-area">
           <header className="topbar">
-            <div className="crumb">
+            <div className="breadcrumb">
               <strong>Nova Industries</strong>
               <span>/ Manager</span>
             </div>
-            <div className="topbar-right">
-              <span className="bell">
-                <Bell size={22} />
-                <i className="bell-dot" />
-              </span>
-              <div className="avatar">DW</div>
+
+            <div className="topbar-actions">
+              <Bell size={18} strokeWidth={1.8} aria-label="Notifications" />
+              <span className="avatar">DW</span>
             </div>
           </header>
 
-          {view.name === 'overview' && <OverviewPage />}
-          {view.name === 'supervisors' && (
-            <SupervisorsPage
-              supervisors={supervisors}
-              onRegister={registerSupervisor}
-              onSendActivation={sendActivation}
-            />
-          )}
-          {view.name === 'list' && (
-            <TaskManagementPage
-              tasks={tasks}
-              submissions={submissions}
-              onCreate={() => setView({ name: 'create' })}
-              onOpen={(id) => setView({ name: 'details', id })}
-              onReview={reviewSubmission}
-            />
-          )}
-          {view.name === 'create' && (
-            <CreateTaskPage supervisors={activeSupervisorNames} onBack={goList} onCreate={createTask} />
-          )}
-          {view.name === 'details' && current && (
-            <TaskDetailsPage
-              task={current}
-              supervisors={activeSupervisorNames}
-              onBack={goList}
-              onUpdate={(patch) => updateTask(current.id, patch)}
-              onDelete={() => deleteTask(current.id)}
-            />
-          )}
+          <main className="content">
+            {page === "templates" && (
+              <TemplatesModule onEditingChange={setIsTemplateEditing} />
+            )}
+
+            {page === "collected" && (
+              <CollectedDataPage records={records} onReview={reviewRecord} />
+            )}
+
+            {isM4Page && (
+              <div className="m4">
+                {page === "overview" && <OverviewPage />}
+                {page === "supervisors" && (
+                  <SupervisorsPage
+                    supervisors={supervisors}
+                    onRegister={registerSupervisor}
+                    onSendActivation={sendActivation}
+                  />
+                )}
+                {page === "tasks" && (
+                  <TaskManagementPage
+                    tasks={tasks}
+                    submissions={submissions}
+                    onCreate={() => setPage("create")}
+                    onOpen={(id) => {
+                      setTaskId(id);
+                      setPage("details");
+                    }}
+                    onReview={reviewSubmission}
+                  />
+                )}
+                {page === "create" && (
+                  <CreateTaskPage
+                    supervisors={activeSupervisorNames}
+                    onBack={goTasks}
+                    onCreate={createTask}
+                  />
+                )}
+                {page === "details" && current && (
+                  <TaskDetailsPage
+                    task={current}
+                    supervisors={activeSupervisorNames}
+                    onBack={goTasks}
+                    onUpdate={(patch) => updateTask(current.id, patch)}
+                    onDelete={() => deleteTask(current.id)}
+                  />
+                )}
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </ReviewContext.Provider>
