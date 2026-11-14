@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { LOCATIONS, SUPERVISORS, TEMPLATES, WAREHOUSES, todayIso } from './taskTypes';
+import { LOCATIONS, TEMPLATES, WAREHOUSES, todayIso } from './taskTypes';
 import type { NewTask } from './taskTypes';
 
+
 interface Props {
+  supervisors: string[];
   onBack: () => void;
   onCreate: (data: NewTask) => void;
 }
 
-export function CreateTaskPage({ onBack, onCreate }: Props) {
+export function CreateTaskPage({ supervisors, onBack, onCreate }: Props) {
   const [form, setForm] = useState<NewTask>({
     title: '',
     warehouse: WAREHOUSES[0],
     location: LOCATIONS[0],
     template: TEMPLATES[0],
-    supervisor: SUPERVISORS[0],
+    supervisor: supervisors[0] ?? '',
     dueDate: todayIso(),
     instructions: '',
   });
@@ -71,7 +73,7 @@ export function CreateTaskPage({ onBack, onCreate }: Props) {
           <div className="field">
             <label>Supervisor</label>
             <select className="input" value={form.supervisor} onChange={(e) => set('supervisor', e.target.value)}>
-              {SUPERVISORS.map((s) => <option key={s}>{s}</option>)}
+              {supervisors.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
         </div>
