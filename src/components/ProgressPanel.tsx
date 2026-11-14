@@ -98,6 +98,7 @@ export function ProgressPanel({ tasks }: { tasks: Task[] }) {
           {shown.length} workers. Offline workers keep submissions on the device and sync when they are back online.
         </p>
       </div>
+      <DevicesPanel />
     </>
   );
 }
