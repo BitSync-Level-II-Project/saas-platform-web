@@ -73,6 +73,11 @@ export default function App() {
       )
       .then((data) => {
         if (!isCancelled) {
+          // If deletion on the last page leaves current page out of bounds, clamp to the last valid page
+          if (data.total > 0 && warehousePage > data.totalPages) {
+            setWarehousePage(data.totalPages);
+            return;
+          }
           setWarehouses(data.items);
           setWarehouseTotal(data.total);
           setWarehouseTotalPages(data.totalPages);
@@ -130,7 +135,13 @@ export default function App() {
       if (selectedWarehouse && selectedWarehouse.id === warehouse.id) {
         setSelectedWarehouse(null);
       }
-      triggerRefresh();
+      // If deleting the only record on the current page (beyond page 1),
+      // navigate back to the previous valid page.
+      if (warehouses.length === 1 && warehousePage > 1) {
+        setWarehousePage((prev) => Math.max(1, prev - 1));
+      } else {
+        triggerRefresh();
+      }
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to delete warehouse');
     }
