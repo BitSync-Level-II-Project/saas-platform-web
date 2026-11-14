@@ -62,9 +62,9 @@ export function ProgressPanel({ tasks }: { tasks: Task[] }) {
         </table>
       </div>
 
-      <div className="section-head">
+                <div className="worker-head">
         <h2 className="section-title">Worker activity</h2>
-        <select className="input status-filter" value={warehouse} onChange={(e) => setWarehouse(e.target.value)}>
+        <select className="worker-filter" value={warehouse} onChange={(e) => setWarehouse(e.target.value)}>
           <option value="All">All warehouses</option>
           {warehouseProgress.map((w) => (
             <option key={w.warehouse} value={w.warehouse}>{w.warehouse} warehouse</option>

@@ -240,3 +240,47 @@ textarea.input { min-height: 90px; resize: vertical; }
   font-weight: 500 !important;
 }
 .m4 .task-title, .m4 td { color: #344054; }
+/* Left-align content so headers and cells line up */
+.m4 { text-align: left; }
+.m4 th, .m4 td { text-align: left !important; vertical-align: middle; }
+.m4 th:last-child, .m4 td:last-child { text-align: right !important; }
+.m4 .task-table td, .m4 .task-table th { padding: 16px 24px; }
+.m4 .task-title { text-align: left; }
+.m4 .task-code { text-align: left; margin-top: 4px; }
+/* Worker activity: title on one line, short dropdown right beside it */
+.m4 .card + .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  margin-top: 32px;
+}
+.m4 .card + .section-head h2 { white-space: nowrap; margin: 0; }
+.m4 .card + .section-head select,
+.m4 .card + .section-head .input {
+  flex: 0 0 auto;
+  width: 200px;
+}
+/* Worker activity: title on one line with the dropdown right beside it */
+.m4 .worker-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0 8px;
+}
+.m4 .worker-head h2 { margin: 0; white-space: nowrap; }
+.m4 .worker-filter {
+  width: 200px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #fff;
+}
+.m4 .worker-filter,
+.m4 .worker-filter option {
+  color: #1f2a44;
+  background: #fff;
+  font-size: 14px;
+}
+.m4 .card:has(> .dev-table) { padding: 24px; }
