@@ -427,9 +427,12 @@ export function CreateTemplatePage({
           <ConfirmPublishDialog
             name={details.name}
             onCancel={() => setIsPublishConfirmOpen(false)}
-            onConfirm={() => {
+            onConfirm={async () => {
               setIsPublishConfirmOpen(false);
-              void persist("publish");
+              const success = await persist("publish");
+              if (success) {
+                onSaved();
+              }
             }}
           />
         )}
