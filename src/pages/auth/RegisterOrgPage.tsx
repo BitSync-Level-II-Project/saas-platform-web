@@ -46,13 +46,15 @@ export const RegisterOrgPage: React.FC = () => {
           </div>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4 mt-6">
+        <form onSubmit={handleRegister} autoComplete="off" className="space-y-4 mt-6">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
               Organization Name
             </label>
             <input
               type="text"
+              name="organization_name"
+              autoComplete="off"
               placeholder="e.g. Apex Logistics"
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
@@ -68,6 +70,8 @@ export const RegisterOrgPage: React.FC = () => {
               </label>
               <input
                 type="text"
+                name="admin_full_name"
+                autoComplete="off"
                 placeholder="e.g. Nimal Perera"
                 value={adminName}
                 onChange={(e) => setAdminName(e.target.value)}
@@ -82,6 +86,8 @@ export const RegisterOrgPage: React.FC = () => {
               </label>
               <input
                 type="text"
+                name="admin_phone"
+                autoComplete="off"
                 placeholder="+94 77 123 4567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -96,6 +102,8 @@ export const RegisterOrgPage: React.FC = () => {
             </label>
             <input
               type="email"
+              name="org_admin_email"
+              autoComplete="new-password"
               placeholder="admin@apex.example"
               value={adminEmail}
               onChange={(e) => setAdminEmail(e.target.value)}
@@ -110,6 +118,8 @@ export const RegisterOrgPage: React.FC = () => {
             </label>
             <input
               type="password"
+              name="org_admin_password"
+              autoComplete="new-password"
               placeholder="Create a strong password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
