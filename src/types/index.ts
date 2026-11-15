@@ -10,6 +10,8 @@ export interface User {
   status: UserStatus;
   scope?: string;
   avatarInitials?: string;
+  workspaceCode?: string;
+  password?: string;
 }
 
 export interface Organization {

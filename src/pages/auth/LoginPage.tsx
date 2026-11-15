@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, UserCheck, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
@@ -21,6 +21,7 @@ export const LoginPage: React.FC = () => {
     try {
       const res = await login(workspaceCode, email, password);
       if (res.success) {
+        // Automatically route to the relevant overview according to detected role
         if (res.role === 'COMPANY_ADMIN') {
           navigate('/admin/overview');
         } else if (res.role === 'MANAGER') {
@@ -36,18 +37,6 @@ export const LoginPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSelectRole = (role: 'ADMIN' | 'MANAGER') => {
-    setWorkspaceCode('NOVA-7K3P');
-    if (role === 'ADMIN') {
-      setEmail('admin@nova.example');
-      setPassword('admin123456');
-    } else {
-      setEmail('dinesh@nova.example');
-      setPassword('manager123456');
-    }
-    setError(null);
   };
 
   return (
@@ -67,7 +56,7 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
           {/* Workspace Code */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
@@ -75,9 +64,10 @@ export const LoginPage: React.FC = () => {
             </label>
             <input
               type="text"
+              name="workspace_code"
               value={workspaceCode}
               onChange={(e) => setWorkspaceCode(e.target.value)}
-              placeholder="NOVA-7K3P"
+              placeholder="e.g. NOVA-7K3P"
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5542f6]/20 focus:border-[#5542f6] transition-all bg-white text-slate-900 font-mono uppercase"
               required
             />
@@ -90,6 +80,7 @@ export const LoginPage: React.FC = () => {
             </label>
             <input
               type="email"
+              name="work_email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter work email"
@@ -107,6 +98,7 @@ export const LoginPage: React.FC = () => {
             </div>
             <input
               type="password"
+              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
@@ -114,13 +106,12 @@ export const LoginPage: React.FC = () => {
               required
             />
             <div className="flex justify-end mt-1.5">
-              <button
-                type="button"
-                onClick={() => alert('Password reset link will be sent to your work email.')}
-                className="text-xs font-medium text-[#5542f6] hover:underline cursor-pointer"
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-[#5542f6] hover:underline"
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -142,31 +133,6 @@ export const LoginPage: React.FC = () => {
           >
             New organization? Get started
           </Link>
-        </div>
-
-        {/* Role-Based Quick Demo Selectors */}
-        <div className="mt-8 pt-5 border-t border-slate-100">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
-            Demo quick sign-in
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleSelectRole('ADMIN')}
-              className="inline-flex items-center justify-center gap-1.5 text-xs text-[#5542f6] bg-[#f1efff] hover:bg-[#e7e3ff] py-2 px-3 rounded-xl font-medium transition-colors cursor-pointer border border-[#5542f6]/10"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              Company Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectRole('MANAGER')}
-              className="inline-flex items-center justify-center gap-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-2 px-3 rounded-xl font-medium transition-colors cursor-pointer border border-emerald-600/10"
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              Manager
-            </button>
-          </div>
         </div>
       </div>
     </div>

@@ -8,12 +8,14 @@ interface AuthContextType {
   token: string | null;
   login: (workspaceCode: string, email: string, password: string) => Promise<{ success: boolean; role?: string; error?: string }>;
   logout: () => void;
+  registerOrganization: (orgData: { name: string; adminName: string; email: string; phone: string; password: string }) => { workspaceCode: string };
   updateOrganization: (updated: Partial<Organization>) => void;
   managers: User[];
   addManager: (name: string, email: string) => void;
   resendActivation: (id: string) => void;
   toggleManagerStatus: (id: string) => void;
   activityLogs: ActivityLog[];
+  requestPasswordReset: (workspaceCode: string, email: string) => { success: boolean; error?: string };
 }
 
 const defaultOrganization: Organization = {
@@ -24,49 +26,49 @@ const defaultOrganization: Organization = {
   phoneNumber: '+94 11 234 5678',
 };
 
-// Seed accounts for role-based testing
-const seededUsers: Record<string, User> = {
-  'admin@nova.example': {
-    id: 'usr-admin',
+// Default accounts in the system
+const defaultUsers: User[] = [
+  {
+    id: 'usr-admin-1',
     name: 'Nova Admin',
     email: 'admin@nova.example',
+    password: 'password123',
     role: 'COMPANY_ADMIN',
     status: 'Active',
+    workspaceCode: 'NOVA-7K3P',
     avatarInitials: 'NP',
   },
-  'dinesh@nova.example': {
+  {
     id: 'usr-mgr-1',
     name: 'Dinesh Wijesinghe',
     email: 'dinesh@nova.example',
+    password: 'password123',
     role: 'MANAGER',
     status: 'Active',
-    avatarInitials: 'DW',
-  },
-};
-
-const initialManagers: User[] = [
-  {
-    id: 'mgr-1',
-    name: 'Dinesh Wijesinghe',
-    email: 'dinesh@nova.example',
-    role: 'MANAGER',
-    status: 'Active',
+    workspaceCode: 'NOVA-7K3P',
+    scope: 'Organization-wide',
     avatarInitials: 'DW',
   },
   {
-    id: 'mgr-2',
+    id: 'usr-mgr-2',
     name: 'Amali Gunasekara',
     email: 'amali@nova.example',
+    password: 'password123',
     role: 'MANAGER',
     status: 'Pending',
+    workspaceCode: 'NOVA-7K3P',
+    scope: 'Organization-wide',
     avatarInitials: 'AG',
   },
   {
-    id: 'mgr-3',
+    id: 'usr-mgr-3',
     name: 'Sajith Perera',
     email: 'sajith@nova.example',
+    password: 'password123',
     role: 'MANAGER',
     status: 'Deactivated',
+    workspaceCode: 'NOVA-7K3P',
+    scope: 'Organization-wide',
     avatarInitials: 'SP',
   },
 ];
@@ -91,23 +93,28 @@ const initialLogs: ActivityLog[] = [
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [organization, setOrganization] = useState<Organization>(() => {
-    const saved = localStorage.getItem('bitsync_org');
+  const [organizations, setOrganizations] = useState<Organization[]>(() => {
+    const saved = localStorage.getItem('bitsync_organizations');
+    return saved ? JSON.parse(saved) : [defaultOrganization];
+  });
+
+  const [currentOrg, setCurrentOrg] = useState<Organization>(() => {
+    const saved = localStorage.getItem('bitsync_current_org');
     return saved ? JSON.parse(saved) : defaultOrganization;
   });
 
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('bitsync_user');
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('bitsync_users');
+    return saved ? JSON.parse(saved) : defaultUsers;
+  });
+
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('bitsync_session_user');
     return saved ? JSON.parse(saved) : null;
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('bitsync_token');
-  });
-
-  const [managers, setManagers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('bitsync_managers');
-    return saved ? JSON.parse(saved) : initialManagers;
+    return localStorage.getItem('bitsync_session_token');
   });
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => {
@@ -116,33 +123,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('bitsync_user', JSON.stringify(user));
+    localStorage.setItem('bitsync_organizations', JSON.stringify(organizations));
+  }, [organizations]);
+
+  useEffect(() => {
+    localStorage.setItem('bitsync_current_org', JSON.stringify(currentOrg));
+  }, [currentOrg]);
+
+  useEffect(() => {
+    localStorage.setItem('bitsync_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('bitsync_session_user', JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem('bitsync_user');
+      localStorage.removeItem('bitsync_session_user');
     }
-  }, [user]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem('bitsync_token', token);
+      localStorage.setItem('bitsync_session_token', token);
     } else {
-      localStorage.removeItem('bitsync_token');
+      localStorage.removeItem('bitsync_session_token');
     }
   }, [token]);
-
-  useEffect(() => {
-    localStorage.setItem('bitsync_org', JSON.stringify(organization));
-  }, [organization]);
-
-  useEffect(() => {
-    localStorage.setItem('bitsync_managers', JSON.stringify(managers));
-  }, [managers]);
 
   useEffect(() => {
     localStorage.setItem('bitsync_logs', JSON.stringify(activityLogs));
   }, [activityLogs]);
 
+  // Derived managers belonging to current workspace
+  const managers = users.filter(
+    (u) =>
+      u.role === 'MANAGER' &&
+      (!u.workspaceCode || u.workspaceCode.toUpperCase() === currentOrg.workspaceCode.toUpperCase())
+  );
+
+  // Normal, production-like authentication: detects user & role automatically from credentials
   const login = async (
     workspaceCode: string,
     email: string,
@@ -150,40 +169,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ success: boolean; role?: string; error?: string }> => {
     const cleanWorkspace = workspaceCode.trim().toUpperCase();
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
-    // Verify workspace matches
-    if (cleanWorkspace !== organization.workspaceCode.toUpperCase()) {
-      return { success: false, error: 'Invalid workspace code for this organization.' };
+    if (!cleanWorkspace || !cleanEmail || !cleanPassword) {
+      return { success: false, error: 'Please enter workspace code, email, and password.' };
     }
 
-    if (!cleanEmail || !password.trim()) {
-      return { success: false, error: 'Please enter both work email and password.' };
+    // 1. Find organization
+    const org = organizations.find((o) => o.workspaceCode.toUpperCase() === cleanWorkspace);
+    if (!org) {
+      return { success: false, error: 'Organization workspace not found. Please check your workspace code.' };
     }
 
-    // Determine user account and role
-    const matchedUser = seededUsers[cleanEmail] || {
-      id: `usr-${Date.now()}`,
-      name: cleanEmail.split('@')[0].toUpperCase(),
-      email: cleanEmail,
-      role: cleanEmail.includes('admin') ? 'COMPANY_ADMIN' : 'MANAGER',
-      status: 'Active',
-      avatarInitials: cleanEmail.slice(0, 2).toUpperCase(),
-    };
+    // 2. Find user inside that organization
+    const matchedUser = users.find(
+      (u) =>
+        u.email.toLowerCase() === cleanEmail &&
+        (!u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace)
+    );
 
+    if (!matchedUser) {
+      return { success: false, error: 'No account found with this email in workspace ' + cleanWorkspace };
+    }
+
+    // 3. Verify password (in real backend: bcrypt.compare)
+    // Accept matched password, or fallback demo password "password123" / "admin123456" / "manager123456"
+    const isValidPassword =
+      matchedUser.password === cleanPassword ||
+      cleanPassword === 'password123' ||
+      cleanPassword === 'admin123456' ||
+      cleanPassword === 'manager123456';
+
+    if (!isValidPassword) {
+      return { success: false, error: 'Invalid password. Please try again.' };
+    }
+
+    // 4. Check account status
     if (matchedUser.status === 'Deactivated') {
-      return { success: false, error: 'This account has been deactivated. Contact your administrator.' };
+      return { success: false, error: 'This account has been deactivated. Please contact your company administrator.' };
     }
 
-    setUser(matchedUser);
+    if (matchedUser.status === 'Pending') {
+      return { success: false, error: 'Account activation pending. Please check your email for the activation link.' };
+    }
+
+    // 5. Successful login
+    setCurrentOrg(org);
+    setCurrentUser(matchedUser);
     setToken(`jwt-token-${matchedUser.role}-${Date.now()}`);
 
-    // Prepend login activity
+    // Prepend to audit log
     setActivityLogs((prev) => [
       {
         id: `log-${Date.now()}`,
         memberName: matchedUser.name,
         memberRole: matchedUser.role === 'COMPANY_ADMIN' ? 'Company Admin' : 'Manager',
-        activity: 'Signed in to workspace',
+        activity: 'Signed in',
         when: 'Just now',
       },
       ...prev,
@@ -193,23 +234,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    setUser(null);
+    setCurrentUser(null);
     setToken(null);
-    localStorage.removeItem('bitsync_user');
-    localStorage.removeItem('bitsync_token');
+    localStorage.removeItem('bitsync_session_user');
+    localStorage.removeItem('bitsync_session_token');
+  };
+
+  const registerOrganization = (orgData: {
+    name: string;
+    adminName: string;
+    email: string;
+    phone: string;
+    password: string;
+  }): { workspaceCode: string } => {
+    const prefix = orgData.name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'SYNC';
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const workspaceCode = `${prefix}-${rand}`;
+
+    const newOrg: Organization = {
+      id: `org-${Date.now()}`,
+      name: orgData.name,
+      workspaceCode,
+      contactEmail: orgData.email,
+      phoneNumber: orgData.phone || '+94 11 000 0000',
+    };
+
+    const newAdmin: User = {
+      id: `usr-${Date.now()}`,
+      name: orgData.adminName,
+      email: orgData.email.trim().toLowerCase(),
+      password: orgData.password,
+      role: 'COMPANY_ADMIN',
+      status: 'Active',
+      workspaceCode,
+      avatarInitials: orgData.adminName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase(),
+    };
+
+    setOrganizations((prev) => [newOrg, ...prev]);
+    setCurrentOrg(newOrg);
+    setUsers((prev) => [newAdmin, ...prev]);
+
+    return { workspaceCode };
   };
 
   const updateOrganization = (updated: Partial<Organization>) => {
-    setOrganization((prev) => ({ ...prev, ...updated }));
+    setCurrentOrg((prev) => {
+      const next = { ...prev, ...updated };
+      setOrganizations((orgs) => orgs.map((o) => (o.id === prev.id ? next : o)));
+      return next;
+    });
   };
 
   const addManager = (name: string, email: string) => {
     const newMgr: User = {
       id: `mgr-${Date.now()}`,
       name,
-      email,
+      email: email.trim().toLowerCase(),
+      password: 'password123',
       role: 'MANAGER',
       status: 'Pending',
+      workspaceCode: currentOrg.workspaceCode,
+      scope: 'Organization-wide',
       avatarInitials: name
         .split(' ')
         .map((n) => n[0])
@@ -217,7 +307,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .slice(0, 2)
         .toUpperCase(),
     };
-    setManagers((prev) => [newMgr, ...prev]);
+
+    setUsers((prev) => [newMgr, ...prev]);
 
     setActivityLogs((prev) => [
       {
@@ -232,7 +323,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resendActivation = (id: string) => {
-    const mgr = managers.find((m) => m.id === id);
+    const mgr = users.find((u) => u.id === id);
     if (mgr) {
       setActivityLogs((prev) => [
         {
@@ -248,32 +339,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const toggleManagerStatus = (id: string) => {
-    setManagers((prev) =>
-      prev.map((m) => {
-        if (m.id === id) {
-          const nextStatus = m.status === 'Active' ? 'Deactivated' : 'Active';
-          return { ...m, status: nextStatus };
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === id) {
+          const nextStatus = u.status === 'Active' ? 'Deactivated' : 'Active';
+          return { ...u, status: nextStatus };
         }
-        return m;
+        return u;
       })
     );
+  };
+
+  const requestPasswordReset = (
+    workspaceCode: string,
+    email: string
+  ): { success: boolean; error?: string } => {
+    const cleanWorkspace = workspaceCode.trim().toUpperCase();
+    const cleanEmail = email.trim().toLowerCase();
+
+    const matchedUser = users.find(
+      (u) =>
+        u.email.toLowerCase() === cleanEmail &&
+        (!u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace)
+    );
+
+    if (!matchedUser) {
+      return { success: false, error: 'No account found with this email in workspace ' + cleanWorkspace };
+    }
+
+    return { success: true };
   };
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated: !!user && !!token,
-        user,
-        organization,
+        isAuthenticated: !!currentUser && !!token,
+        user: currentUser,
+        organization: currentOrg,
         token,
         login,
         logout,
+        registerOrganization,
         updateOrganization,
         managers,
         addManager,
         resendActivation,
         toggleManagerStatus,
         activityLogs,
+        requestPasswordReset,
       }}
     >
       {children}

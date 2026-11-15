@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterOrgPage } from './pages/auth/RegisterOrgPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { OverviewPage } from './pages/admin/OverviewPage';
 import { ManagersPage } from './pages/admin/ManagersPage';
@@ -15,9 +16,10 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
+          {/* Public Auth Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register-org" element={<RegisterOrgPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Company Admin Viewpoint (M1 Protected) */}
           <Route
