@@ -1,7 +1,7 @@
 /**
  * Real Email Dispatch Service for SiteTrace
- * Uses FormSubmit API to deliver real emails to actual Gmail and corporate inboxes
- * without exposing secret server credentials in the frontend.
+ * Connects to the NestJS Backend (`saas-platform-api` on http://localhost:3000)
+ * to deliver real, production-grade activation emails to ANY recipient email address.
  */
 
 export interface SendActivationEmailParams {
@@ -11,14 +11,47 @@ export interface SendActivationEmailParams {
   activationUrl: string;
 }
 
+const BACKEND_API_URL = 'http://localhost:3000/api/auth/invite-manager';
+
 export const sendActivationEmail = async ({
   toEmail,
   managerName,
   workspaceCode,
   activationUrl,
 }: SendActivationEmailParams): Promise<{ success: boolean; message: string }> => {
+  const cleanEmail = toEmail.trim();
+
+  // 1. Primary: Dispatch via NestJS Backend Email Service
   try {
-    const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(toEmail.trim())}`, {
+    const backendRes = await fetch(BACKEND_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: managerName,
+        email: cleanEmail,
+        workspaceCode,
+        activationUrl,
+      }),
+    });
+
+    if (backendRes.ok) {
+      const data = await backendRes.json();
+      if (data.success) {
+        return {
+          success: true,
+          message: `Activation email dispatched by backend to ${cleanEmail}`,
+        };
+      }
+    }
+  } catch {
+    // Backend offline or unreachable, fall back to FormSubmit relay
+  }
+
+  // 2. Secondary fallback: FormSubmit Cloud Dispatch
+  try {
+    const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,7 +62,7 @@ export const sendActivationEmail = async ({
         _template: 'table',
         Organization_Workspace: workspaceCode,
         Manager_Name: managerName,
-        Recipient_Email: toEmail.trim(),
+        Recipient_Email: cleanEmail,
         Activation_Link: activationUrl,
         Instructions:
           'Click the Activation Link above to choose your password and activate your SiteTrace Manager account.',
@@ -41,12 +74,16 @@ export const sendActivationEmail = async ({
 
     return {
       success: isSuccess,
-      message: data.message || (isSuccess ? 'Activation email dispatched successfully.' : 'Email service returned pending confirmation.'),
+      message:
+        data.message ||
+        (isSuccess
+          ? `Activation email sent to ${cleanEmail}`
+          : 'Pending recipient verification link.'),
     };
   } catch {
     return {
       success: false,
-      message: 'Failed to connect to email dispatch service. Please check your internet connection.',
+      message: 'Failed to dispatch email. Please ensure backend is running or check internet connectivity.',
     };
   }
 };
