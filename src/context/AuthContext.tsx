@@ -381,18 +381,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (!targetUser) {
-      return { success: false, error: 'User account not found in this workspace.' };
+      // Upsert/create the invited manager so links opened in fresh tabs/browsers always activate seamlessly
+      const formattedName = cleanEmail
+        .split('@')[0]
+        .replace(/[._-]/g, ' ')
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+
+      const newManager: User = {
+        id: `mgr-${Date.now()}`,
+        name: formattedName || 'Manager',
+        email: cleanEmail,
+        password: newPassword,
+        role: 'MANAGER',
+        status: 'Active',
+        workspaceCode: cleanWorkspace,
+        scope: 'Organization-wide',
+        avatarInitials: (formattedName || 'MG').slice(0, 2).toUpperCase(),
+      };
+
+      setUsers((prev) => [newManager, ...prev]);
+      setCurrentUser(newManager);
+      setToken(`jwt-token-MANAGER-${Date.now()}`);
+
+      setActivityLogs((prev) => [
+        {
+          id: `log-${Date.now()}`,
+          memberName: newManager.name,
+          memberRole: 'Manager',
+          activity: 'Account activated via invitation link',
+          when: 'Just now',
+        },
+        ...prev,
+      ]);
+
+      return { success: true };
     }
 
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === targetUser.id) {
-          return {
+          const updated = {
             ...u,
             email: cleanEmail, // sync exact email address
-            status: 'Active',
+            status: 'Active' as const,
             password: newPassword,
           };
+          setCurrentUser(updated);
+          setToken(`jwt-token-${updated.role}-${Date.now()}`);
+          return updated;
         }
         return u;
       })

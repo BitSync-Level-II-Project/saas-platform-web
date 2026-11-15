@@ -50,13 +50,13 @@ export const ActivateAccountPage: React.FC = () => {
 
       // Auto sign-in and redirect to Manager Portal
       setTimeout(async () => {
-        const loginRes = await login(workspaceCode, email, password);
-        if (loginRes.success) {
-          navigate('/manager');
-        } else {
-          navigate('/login');
+        try {
+          await login(workspaceCode, email, password);
+        } catch {
+          // already authenticated by activateAccount
         }
-      }, 1500);
+        navigate('/manager');
+      }, 1000);
     } catch {
       setError('An unexpected error occurred during activation.');
       setIsSubmitting(false);
