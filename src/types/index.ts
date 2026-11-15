@@ -1,18 +1,23 @@
+export type UserRole = 'COMPANY_ADMIN' | 'MANAGER' | 'SUPERVISOR' | 'WORKER';
+
+export type UserStatus = 'Active' | 'Pending' | 'Deactivated';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  scope?: string;
+  avatarInitials?: string;
+}
+
 export interface Organization {
   id: string;
   name: string;
   workspaceCode: string;
   contactEmail: string;
   phoneNumber: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'COMPANY_ADMIN' | 'MANAGER' | 'SUPERVISOR' | 'WORKER';
-  status: 'Active' | 'Pending' | 'Deactivated';
-  avatarInitials?: string;
 }
 
 export interface ActivityLog {

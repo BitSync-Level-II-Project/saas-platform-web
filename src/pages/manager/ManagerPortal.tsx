@@ -9,7 +9,8 @@ import {
   UsersRound,
   Warehouse,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "../../App.css";
 import "../../TaskModule.css";
 import siteTraceLogo from "../../assets/SiteTrace-logo.svg";
@@ -61,6 +62,14 @@ const PAGE_OF: Record<string, Page> = {
 };
 
 export function ManagerPortal() {
+  const { organization, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    logout();
+    navigate("/login");
+  };
+
   const [page, setPage] = useState<Page>("templates");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [isTemplateEditing, setIsTemplateEditing] = useState(false);
@@ -205,7 +214,7 @@ export function ManagerPortal() {
           </div>
 
           <div className="organization-card">
-            <strong>Nova Industries</strong>
+            <strong>{organization?.name || "Nova Industries"}</strong>
             <small>Manager</small>
           </div>
 
@@ -242,30 +251,35 @@ export function ManagerPortal() {
 
           <div className="sidebar-footer">
             <div className="profile">
-              <span className="avatar avatar--small">DW</span>
+              <span className="avatar avatar--small">{user?.avatarInitials || "DW"}</span>
               <div>
-                <strong>Dinesh</strong>
+                <strong>{user?.name?.split(' ')[0] || "Dinesh"}</strong>
                 <small>My profile</small>
               </div>
             </div>
 
-            <Link to="/login" className="nav-item sign-out">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="nav-item sign-out"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+            >
               <LogOut size={17} strokeWidth={1.8} />
               <span>Sign out</span>
-            </Link>
+            </button>
           </div>
         </aside>
 
         <div className="page-area">
           <header className="topbar">
             <div className="breadcrumb">
-              <strong>Nova Industries</strong>
+              <strong>{organization?.name || "Nova Industries"}</strong>
               <span>/ Manager</span>
             </div>
 
             <div className="topbar-actions">
               <Bell size={18} strokeWidth={1.8} aria-label="Notifications" />
-              <span className="avatar">DW</span>
+              <span className="avatar">{user?.avatarInitials || "DW"}</span>
             </div>
           </header>
 

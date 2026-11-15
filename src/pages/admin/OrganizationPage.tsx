@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
-import { Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Info, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const OrganizationPage: React.FC = () => {
-  const [orgName, setOrgName] = useState('Nova Industries');
-  const [contactEmail, setContactEmail] = useState('admin@nova.example');
-  const [phone, setPhone] = useState('+94 11 234 5678');
+  const { organization, updateOrganization } = useAuth();
+
+  const [orgName, setOrgName] = useState(organization?.name || 'Nova Industries');
+  const [contactEmail, setContactEmail] = useState(organization?.contactEmail || 'admin@nova.example');
+  const [phone, setPhone] = useState(organization?.phoneNumber || '+94 11 234 5678');
   const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (organization) {
+      setOrgName(organization.name);
+      setContactEmail(organization.contactEmail);
+      setPhone(organization.phoneNumber);
+    }
+  }, [organization]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    updateOrganization({
+      name: orgName.trim(),
+      contactEmail: contactEmail.trim(),
+      phoneNumber: phone.trim(),
+    });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
@@ -17,8 +33,9 @@ export const OrganizationPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Toast Notification */}
       {isSaved && (
-        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs z-50">
-          Organization details saved successfully!
+        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs z-50">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>Organization details updated successfully!</span>
         </div>
       )}
 
@@ -82,7 +99,7 @@ export const OrganizationPage: React.FC = () => {
               Workspace code
             </label>
             <div className="font-mono text-xl font-bold text-slate-900 tracking-wider py-1">
-              NOVA-7K3P
+              {organization?.workspaceCode || 'NOVA-7K3P'}
             </div>
             <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5" />

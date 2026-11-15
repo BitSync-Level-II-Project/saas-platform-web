@@ -1,43 +1,14 @@
 import React, { useState } from 'react';
-import { Search, Plus, X } from 'lucide-react';
-
-interface ManagerRecord {
-  id: string;
-  name: string;
-  email: string;
-  scope: string;
-  status: 'Active' | 'Pending' | 'Deactivated';
-}
-
-const initialManagers: ManagerRecord[] = [
-  {
-    id: '1',
-    name: 'Dinesh Wijesinghe',
-    email: 'dinesh@nova.example',
-    scope: 'Organization-wide',
-    status: 'Active',
-  },
-  {
-    id: '2',
-    name: 'Amali Gunasekara',
-    email: 'amali@nova.example',
-    scope: 'Organization-wide',
-    status: 'Pending',
-  },
-  {
-    id: '3',
-    name: 'Sajith Perera',
-    email: 'sajith@nova.example',
-    scope: 'Organization-wide',
-    status: 'Deactivated',
-  },
-];
+import { Search, Plus, X, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import type { UserStatus } from '../../types';
 
 export const ManagersPage: React.FC = () => {
-  const [managers, setManagers] = useState<ManagerRecord[]>(initialManagers);
+  const { managers, addManager, resendActivation, toggleManagerStatus } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // New manager modal inputs
   const [name, setName] = useState('');
@@ -57,33 +28,22 @@ export const ManagersPage: React.FC = () => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
 
-    const newMgr: ManagerRecord = {
-      id: String(Date.now()),
-      name: name.trim(),
-      email: email.trim(),
-      scope: 'Organization-wide',
-      status: 'Pending',
-    };
-
-    setManagers([newMgr, ...managers]);
+    addManager(name.trim(), email.trim());
+    setToastMessage(`Manager registered: ${name.trim()}`);
     setName('');
     setEmail('');
     setIsModalOpen(false);
+
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const toggleStatus = (id: string) => {
-    setManagers(
-      managers.map((m) => {
-        if (m.id === id) {
-          const next = m.status === 'Active' ? 'Deactivated' : 'Active';
-          return { ...m, status: next };
-        }
-        return m;
-      })
-    );
+  const handleResend = (id: string, mgrName: string) => {
+    resendActivation(id);
+    setToastMessage(`Activation email re-sent to ${mgrName}`);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const getStatusBadge = (status: ManagerRecord['status']) => {
+  const getStatusBadge = (status: UserStatus) => {
     switch (status) {
       case 'Active':
         return (
@@ -108,6 +68,14 @@ export const ManagersPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs z-50">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Managers</h1>
@@ -182,13 +150,13 @@ export const ManagersPage: React.FC = () => {
                     <p className="font-semibold text-slate-900 text-sm">{mgr.name}</p>
                     <p className="text-xs text-slate-400 mt-0.5">{mgr.email}</p>
                   </td>
-                  <td className="py-4 px-6 text-sm text-slate-600">{mgr.scope}</td>
+                  <td className="py-4 px-6 text-sm text-slate-600">{mgr.scope || 'Organization-wide'}</td>
                   <td className="py-4 px-6">{getStatusBadge(mgr.status)}</td>
                   <td className="py-4 px-6 text-right">
                     {mgr.status === 'Pending' ? (
                       <button
                         type="button"
-                        onClick={() => alert(`Activation email resent to ${mgr.email}`)}
+                        onClick={() => handleResend(mgr.id, mgr.name)}
                         className="text-xs font-medium text-[#5542f6] hover:underline cursor-pointer"
                       >
                         Resend Activation
@@ -196,7 +164,7 @@ export const ManagersPage: React.FC = () => {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => toggleStatus(mgr.id)}
+                        onClick={() => toggleManagerStatus(mgr.id)}
                         className="text-xs font-medium text-[#5542f6] hover:underline cursor-pointer"
                       >
                         {mgr.status === 'Active' ? 'Deactivate' : 'Activate'}

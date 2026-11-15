@@ -1,40 +1,57 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { Shield, UserCheck, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // Multi-tenant login fields
   const [workspaceCode, setWorkspaceCode] = useState('NOVA-7K3P');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!workspaceCode.trim() || !email.trim() || !password.trim()) {
-      setError('Please fill in all fields.');
-      return;
+    setIsLoading(true);
+    try {
+      const res = await login(workspaceCode, email, password);
+      if (res.success) {
+        if (res.role === 'COMPANY_ADMIN') {
+          navigate('/admin/overview');
+        } else if (res.role === 'MANAGER') {
+          navigate('/manager');
+        } else {
+          navigate('/admin/overview');
+        }
+      } else {
+        setError(res.error || 'Invalid credentials or workspace code.');
+      }
+    } catch {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    // Simulate successful login and navigate to admin overview
-    navigate('/admin/overview');
   };
 
-  // Quick helper for easy demonstration
-  const handleAutoFill = () => {
+  const handleSelectRole = (role: 'ADMIN' | 'MANAGER') => {
     setWorkspaceCode('NOVA-7K3P');
-    setEmail('admin@nova.example');
-    setPassword('admin123456');
+    if (role === 'ADMIN') {
+      setEmail('admin@nova.example');
+      setPassword('admin123456');
+    } else {
+      setEmail('dinesh@nova.example');
+      setPassword('manager123456');
+    }
     setError(null);
   };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center p-4">
-      {/* Centered Login Card */}
       <div className="w-full max-w-[460px] bg-white border border-slate-200/90 rounded-2xl shadow-sm p-8 sm:p-10">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           Welcome back
@@ -61,7 +78,7 @@ export const LoginPage: React.FC = () => {
               value={workspaceCode}
               onChange={(e) => setWorkspaceCode(e.target.value)}
               placeholder="NOVA-7K3P"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5542f6]/20 focus:border-[#5542f6] transition-all bg-white text-slate-900 font-mono"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5542f6]/20 focus:border-[#5542f6] transition-all bg-white text-slate-900 font-mono uppercase"
               required
             />
           </div>
@@ -83,9 +100,11 @@ export const LoginPage: React.FC = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                Password
+              </label>
+            </div>
             <input
               type="password"
               value={password}
@@ -108,13 +127,14 @@ export const LoginPage: React.FC = () => {
           {/* Sign In Button */}
           <button
             type="submit"
-            className="w-full bg-[#5542f6] hover:bg-[#4834e0] text-white font-medium py-3 rounded-xl shadow-xs transition-colors cursor-pointer text-sm mt-2"
+            disabled={isLoading}
+            className="w-full bg-[#5542f6] hover:bg-[#4834e0] text-white font-medium py-3 rounded-xl shadow-xs transition-colors cursor-pointer text-sm mt-2 disabled:opacity-50"
           >
-            Sign In
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        {/* Footer Link (Navigates to /register-org) */}
+        {/* Footer Link */}
         <div className="mt-8 text-center">
           <Link
             to="/register-org"
@@ -124,17 +144,29 @@ export const LoginPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Presentation Demo Auto-Fill */}
-        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400">Presentation demo?</span>
-          <button
-            type="button"
-            onClick={handleAutoFill}
-            className="inline-flex items-center gap-1.5 text-xs text-[#5542f6] bg-[#f1efff] hover:bg-[#e7e3ff] px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Auto-fill credentials
-          </button>
+        {/* Role-Based Quick Demo Selectors */}
+        <div className="mt-8 pt-5 border-t border-slate-100">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
+            Demo quick sign-in
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleSelectRole('ADMIN')}
+              className="inline-flex items-center justify-center gap-1.5 text-xs text-[#5542f6] bg-[#f1efff] hover:bg-[#e7e3ff] py-2 px-3 rounded-xl font-medium transition-colors cursor-pointer border border-[#5542f6]/10"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Company Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectRole('MANAGER')}
+              className="inline-flex items-center justify-center gap-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-2 px-3 rounded-xl font-medium transition-colors cursor-pointer border border-emerald-600/10"
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              Manager
+            </button>
+          </div>
         </div>
       </div>
     </div>

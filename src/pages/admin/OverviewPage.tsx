@@ -1,58 +1,45 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const OverviewPage: React.FC = () => {
+  const { organization, managers, activityLogs, addManager } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // State matching your Figma overview data
-  const [activeCount] = useState(3);
-  const [pendingCount, setPendingCount] = useState(1);
-  const [alertCount] = useState(1);
+  // Derived counts from AuthContext
+  const activeCount = managers.filter((m) => m.status === 'Active').length;
+  const pendingCount = managers.filter((m) => m.status === 'Pending').length;
+  const alertCount = 1;
 
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
-
-  const [activityLogs, setActivityLogs] = useState([
-    {
-      id: '1',
-      name: 'Amali Gunasekara',
-      role: 'Manager',
-      activity: 'Account registered · Activation pending',
-      when: 'Today, 09:15',
-    },
-    {
-      id: '2',
-      name: 'Dinesh Wijesinghe',
-      role: 'Manager',
-      activity: 'Signed in',
-      when: 'Today, 08:45',
-    },
-  ]);
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newEmail.trim()) return;
 
-    // Add new activity log
-    setActivityLogs([
-      {
-        id: String(Date.now()),
-        name: newName,
-        role: 'Manager',
-        activity: 'Account registered · Activation pending',
-        when: 'Just now',
-      },
-      ...activityLogs,
-    ]);
-
-    setPendingCount((prev) => prev + 1);
+    addManager(newName.trim(), newEmail.trim());
+    setToastMessage(`Manager ${newName.trim()} registered. Activation email sent.`);
     setNewName('');
     setNewEmail('');
     setIsModalOpen(false);
+
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
   };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs z-50">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -88,7 +75,7 @@ export const OverviewPage: React.FC = () => {
             Your organization is ready
           </h2>
           <p className="text-sm text-slate-500 mt-0.5">
-            Nova Industries · Workspace NOVA-7K3P
+            {organization?.name || 'Nova Industries'} · Workspace {organization?.workspaceCode || 'NOVA-7K3P'}
           </p>
         </div>
         <button
@@ -125,8 +112,8 @@ export const OverviewPage: React.FC = () => {
               {activityLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
                   <td className="py-4 px-6">
-                    <p className="font-semibold text-slate-900 text-sm">{log.name}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{log.role}</p>
+                    <p className="font-semibold text-slate-900 text-sm">{log.memberName}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{log.memberRole}</p>
                   </td>
                   <td className="py-4 px-6 text-sm text-slate-600">{log.activity}</td>
                   <td className="py-4 px-6 text-sm text-slate-400 text-right whitespace-nowrap">
@@ -195,7 +182,7 @@ export const OverviewPage: React.FC = () => {
                   type="submit"
                   className="px-5 py-2 text-xs font-medium bg-[#5542f6] hover:bg-[#4834e0] text-white rounded-xl shadow-xs"
                 >
-                  Register
+                  Register & Invite
                 </button>
               </div>
             </form>
