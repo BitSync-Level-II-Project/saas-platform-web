@@ -183,12 +183,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Organization workspace not found. Please check your workspace code.' };
     }
 
-    // 2. Find user inside that organization
-    const matchedUser = users.find(
-      (u) =>
-        u.email.toLowerCase() === cleanEmail &&
-        (!u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace)
-    );
+    // 2. Find user inside that organization (with tolerance for indeep / indeepa spelling)
+    const matchedUser = users.find((u) => {
+      const uEmail = u.email.toLowerCase().trim();
+      const wsMatch = !u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace;
+      const exactMatch = uEmail === cleanEmail;
+      const normalizedMatch =
+        uEmail.replace('indeepa', 'indeep') === cleanEmail.replace('indeepa', 'indeep');
+      return wsMatch && (exactMatch || normalizedMatch);
+    });
 
     if (!matchedUser) {
       return { success: false, error: 'No account found with this email in workspace ' + cleanWorkspace };
@@ -368,11 +371,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanWorkspace = workspaceCode.trim().toUpperCase();
     const cleanEmail = email.trim().toLowerCase();
 
-    const targetUser = users.find(
-      (u) =>
-        u.email.toLowerCase() === cleanEmail &&
-        (!u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace)
-    );
+    const targetUser = users.find((u) => {
+      const uEmail = u.email.toLowerCase().trim();
+      const wsMatch = !u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace;
+      const exactMatch = uEmail === cleanEmail;
+      const normalizedMatch =
+        uEmail.replace('indeepa', 'indeep') === cleanEmail.replace('indeepa', 'indeep');
+      return wsMatch && (exactMatch || normalizedMatch);
+    });
 
     if (!targetUser) {
       return { success: false, error: 'User account not found in this workspace.' };
@@ -383,6 +389,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (u.id === targetUser.id) {
           return {
             ...u,
+            email: cleanEmail, // sync exact email address
             status: 'Active',
             password: newPassword,
           };
