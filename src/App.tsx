@@ -6,6 +6,7 @@ import { OverviewPage } from './pages/admin/OverviewPage';
 import { ManagersPage } from './pages/admin/ManagersPage';
 import { OrganizationPage } from './pages/admin/OrganizationPage';
 import { AlertsPage } from './pages/admin/AlertsPage';
+import { ManagerPortal } from './pages/manager/ManagerPortal';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register-org" element={<RegisterOrgPage />} />
 
-        {/* Company Admin Area */}
+        {/* Company Admin Viewpoint (M1) */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/overview" replace />} />
           <Route path="overview" element={<OverviewPage />} />
@@ -24,6 +25,9 @@ function App() {
           <Route path="alerts" element={<AlertsPage />} />
           <Route path="*" element={<Navigate to="/admin/overview" replace />} />
         </Route>
+
+        {/* Manager Viewpoint (M3 Templates, M4 Tasks, Collected Data) */}
+        <Route path="/manager/*" element={<ManagerPortal />} />
 
         {/* Fallbacks */}
         <Route path="/" element={<Navigate to="/login" replace />} />
