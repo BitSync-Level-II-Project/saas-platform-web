@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterOrgPage } from './pages/auth/RegisterOrgPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ActivateAccountPage } from './pages/auth/ActivateAccountPage';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { OverviewPage } from './pages/admin/OverviewPage';
 import { ManagersPage } from './pages/admin/ManagersPage';
@@ -20,6 +21,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register-org" element={<RegisterOrgPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/activate-account" element={<ActivateAccountPage />} />
 
           {/* Company Admin Viewpoint (M1 Protected) */}
           <Route

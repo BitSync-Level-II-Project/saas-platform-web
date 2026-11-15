@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ActivationModal } from '../../components/auth/ActivationModal';
 
 export const OverviewPage: React.FC = () => {
-  const { organization, managers, activityLogs, addManager } = useAuth();
+  const { organization, managers, activityLogs, addManager, activateManagerDirectly } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -15,19 +16,38 @@ export const OverviewPage: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
 
+  const [activationModal, setActivationModal] = useState<{
+    isOpen: boolean;
+    managerName: string;
+    email: string;
+    workspaceCode: string;
+    activationUrl: string;
+    id?: string;
+  }>({
+    isOpen: false,
+    managerName: '',
+    email: '',
+    workspaceCode: '',
+    activationUrl: '',
+  });
+
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newEmail.trim()) return;
 
-    addManager(newName.trim(), newEmail.trim());
-    setToastMessage(`Manager ${newName.trim()} registered. Activation email sent.`);
+    const res = addManager(newName.trim(), newEmail.trim());
     setNewName('');
     setNewEmail('');
     setIsModalOpen(false);
 
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
+    setActivationModal({
+      isOpen: true,
+      managerName: res.name,
+      email: res.email,
+      workspaceCode: res.workspaceCode,
+      activationUrl: res.activationUrl,
+      id: res.id,
+    });
   };
 
   return (
@@ -189,6 +209,25 @@ export const OverviewPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Dispatched Activation Modal */}
+      <ActivationModal
+        isOpen={activationModal.isOpen}
+        onClose={() => setActivationModal((prev) => ({ ...prev, isOpen: false }))}
+        managerName={activationModal.managerName}
+        email={activationModal.email}
+        workspaceCode={activationModal.workspaceCode}
+        activationUrl={activationModal.activationUrl}
+        onInstantActivate={
+          activationModal.id
+            ? () => {
+                activateManagerDirectly(activationModal.id!);
+                setToastMessage(`Manager account for ${activationModal.managerName} activated!`);
+                setTimeout(() => setToastMessage(null), 3000);
+              }
+            : undefined
+        }
+      />
     </div>
   );
 };

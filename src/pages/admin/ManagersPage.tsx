@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
 import { Search, Plus, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ActivationModal } from '../../components/auth/ActivationModal';
 import type { UserStatus } from '../../types';
 
 export const ManagersPage: React.FC = () => {
-  const { managers, addManager, resendActivation, toggleManagerStatus } = useAuth();
+  const {
+    managers,
+    addManager,
+    resendActivation,
+    activateManagerDirectly,
+    toggleManagerStatus,
+    organization,
+  } = useAuth();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +22,22 @@ export const ManagersPage: React.FC = () => {
   // New manager modal inputs
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+
+  // Activation modal state for dispatched links
+  const [activationModal, setActivationModal] = useState<{
+    isOpen: boolean;
+    managerName: string;
+    email: string;
+    workspaceCode: string;
+    activationUrl: string;
+    id?: string;
+  }>({
+    isOpen: false,
+    managerName: '',
+    email: '',
+    workspaceCode: '',
+    activationUrl: '',
+  });
 
   // Filter logic
   const filtered = managers.filter((m) => {
@@ -28,19 +53,40 @@ export const ManagersPage: React.FC = () => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
 
-    addManager(name.trim(), email.trim());
-    setToastMessage(`Manager registered: ${name.trim()}`);
+    const res = addManager(name.trim(), email.trim());
     setName('');
     setEmail('');
     setIsModalOpen(false);
 
-    setTimeout(() => setToastMessage(null), 3000);
+    // Open activation link modal
+    setActivationModal({
+      isOpen: true,
+      managerName: res.name,
+      email: res.email,
+      workspaceCode: res.workspaceCode,
+      activationUrl: res.activationUrl,
+      id: res.id,
+    });
   };
 
-  const handleResend = (id: string, mgrName: string) => {
-    resendActivation(id);
-    setToastMessage(`Activation email re-sent to ${mgrName}`);
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleResend = (id: string) => {
+    const res = resendActivation(id);
+    if (res) {
+      setActivationModal({
+        isOpen: true,
+        managerName: res.name,
+        email: res.email,
+        workspaceCode: res.workspaceCode,
+        activationUrl: res.activationUrl,
+        id,
+      });
+    }
+  };
+
+  const handleInstantActivate = (id: string, mgrName: string) => {
+    activateManagerDirectly(id);
+    setToastMessage(`Manager account for ${mgrName} activated successfully!`);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const getStatusBadge = (status: UserStatus) => {
@@ -154,13 +200,22 @@ export const ManagersPage: React.FC = () => {
                   <td className="py-4 px-6">{getStatusBadge(mgr.status)}</td>
                   <td className="py-4 px-6 text-right">
                     {mgr.status === 'Pending' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleResend(mgr.id, mgr.name)}
-                        className="text-xs font-medium text-[#5542f6] hover:underline cursor-pointer"
-                      >
-                        Resend Activation
-                      </button>
+                      <div className="flex items-center justify-end gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => handleInstantActivate(mgr.id, mgr.name)}
+                          className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Activate Now
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleResend(mgr.id)}
+                          className="text-xs font-medium text-[#5542f6] hover:underline cursor-pointer"
+                        >
+                          Resend Activation
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"
@@ -183,21 +238,28 @@ export const ManagersPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-        <div className="py-3 px-6 bg-[#fafafa] border-t border-slate-100 text-xs text-slate-400">
+
+        {/* Table footer count */}
+        <div className="py-3 px-6 border-t border-slate-100 bg-[#fafafa] text-xs text-slate-400">
           {filtered.length} {filtered.length === 1 ? 'record' : 'records'}
         </div>
       </div>
 
-      {/* Modal: Register Manager */}
+      {/* Register Manager Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900">Register New Manager</h3>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Register Manager</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Adding manager to {organization?.name || 'Nova Industries'}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -205,52 +267,79 @@ export const ManagersPage: React.FC = () => {
 
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase">
+                <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
                   Full Name
                 </label>
                 <input
                   type="text"
+                  required
                   placeholder="e.g. Kasun Fernando"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5542f6]/20 focus:border-[#5542f6]"
-                  required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase">
+                <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
                   Work Email
                 </label>
                 <input
                   type="email"
+                  required
                   placeholder="e.g. kasun@nova.example"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5542f6]/20 focus:border-[#5542f6]"
-                  required
                 />
               </div>
 
-              <div className="pt-2 flex justify-end gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                  Scope
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  value="Organization-wide"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-medium bg-[#5542f6] hover:bg-[#4834e0] text-white rounded-xl shadow-xs"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-[#5542f6] hover:bg-[#4834e0] text-white text-sm font-medium transition-colors shadow-xs"
                 >
-                  Register & Invite
+                  Send Activation
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Dispatched Activation Modal */}
+      <ActivationModal
+        isOpen={activationModal.isOpen}
+        onClose={() => setActivationModal((prev) => ({ ...prev, isOpen: false }))}
+        managerName={activationModal.managerName}
+        email={activationModal.email}
+        workspaceCode={activationModal.workspaceCode}
+        activationUrl={activationModal.activationUrl}
+        onInstantActivate={
+          activationModal.id
+            ? () => handleInstantActivate(activationModal.id!, activationModal.managerName)
+            : undefined
+        }
+      />
     </div>
   );
 };

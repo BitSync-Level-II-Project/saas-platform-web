@@ -11,8 +11,10 @@ interface AuthContextType {
   registerOrganization: (orgData: { name: string; adminName: string; email: string; phone: string; password: string }) => { workspaceCode: string };
   updateOrganization: (updated: Partial<Organization>) => void;
   managers: User[];
-  addManager: (name: string, email: string) => void;
-  resendActivation: (id: string) => void;
+  addManager: (name: string, email: string) => { id: string; email: string; name: string; workspaceCode: string; activationUrl: string };
+  resendActivation: (id: string) => { email: string; name: string; workspaceCode: string; activationUrl: string } | null;
+  activateAccount: (workspaceCode: string, email: string, newPassword: string) => { success: boolean; error?: string };
+  activateManagerDirectly: (id: string) => void;
   toggleManagerStatus: (id: string) => void;
   activityLogs: ActivityLog[];
   requestPasswordReset: (workspaceCode: string, email: string) => { success: boolean; error?: string };
@@ -290,15 +292,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const addManager = (name: string, email: string) => {
+  const addManager = (
+    name: string,
+    email: string
+  ): { id: string; email: string; name: string; workspaceCode: string; activationUrl: string } => {
+    const id = `mgr-${Date.now()}`;
+    const cleanEmail = email.trim().toLowerCase();
+    const ws = currentOrg.workspaceCode;
     const newMgr: User = {
-      id: `mgr-${Date.now()}`,
+      id,
       name,
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password: 'password123',
       role: 'MANAGER',
       status: 'Pending',
-      workspaceCode: currentOrg.workspaceCode,
+      workspaceCode: ws,
       scope: 'Organization-wide',
       avatarInitials: name
         .split(' ')
@@ -320,9 +328,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
       ...prev,
     ]);
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    const activationUrl = `${origin}/activate-account?ws=${encodeURIComponent(ws)}&email=${encodeURIComponent(cleanEmail)}`;
+
+    return { id, email: cleanEmail, name, workspaceCode: ws, activationUrl };
   };
 
-  const resendActivation = (id: string) => {
+  const resendActivation = (
+    id: string
+  ): { email: string; name: string; workspaceCode: string; activationUrl: string } | null => {
     const mgr = users.find((u) => u.id === id);
     if (mgr) {
       setActivityLogs((prev) => [
@@ -335,7 +350,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         ...prev,
       ]);
+
+      const ws = mgr.workspaceCode || currentOrg.workspaceCode;
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+      const activationUrl = `${origin}/activate-account?ws=${encodeURIComponent(ws)}&email=${encodeURIComponent(mgr.email)}`;
+
+      return { email: mgr.email, name: mgr.name, workspaceCode: ws, activationUrl };
     }
+    return null;
+  };
+
+  const activateAccount = (
+    workspaceCode: string,
+    email: string,
+    newPassword: string
+  ): { success: boolean; error?: string } => {
+    const cleanWorkspace = workspaceCode.trim().toUpperCase();
+    const cleanEmail = email.trim().toLowerCase();
+
+    const targetUser = users.find(
+      (u) =>
+        u.email.toLowerCase() === cleanEmail &&
+        (!u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace)
+    );
+
+    if (!targetUser) {
+      return { success: false, error: 'User account not found in this workspace.' };
+    }
+
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === targetUser.id) {
+          return {
+            ...u,
+            status: 'Active',
+            password: newPassword,
+          };
+        }
+        return u;
+      })
+    );
+
+    setActivityLogs((prev) => [
+      {
+        id: `log-${Date.now()}`,
+        memberName: targetUser.name,
+        memberRole: targetUser.role === 'COMPANY_ADMIN' ? 'Company Admin' : 'Manager',
+        activity: 'Account activated',
+        when: 'Just now',
+      },
+      ...prev,
+    ]);
+
+    return { success: true };
+  };
+
+  const activateManagerDirectly = (id: string) => {
+    const mgr = users.find((u) => u.id === id);
+    if (!mgr) return;
+
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === id) {
+          return { ...u, status: 'Active' };
+        }
+        return u;
+      })
+    );
+
+    setActivityLogs((prev) => [
+      {
+        id: `log-${Date.now()}`,
+        memberName: mgr.name,
+        memberRole: 'Manager',
+        activity: 'Account directly activated by Admin',
+        when: 'Just now',
+      },
+      ...prev,
+    ]);
   };
 
   const toggleManagerStatus = (id: string) => {
@@ -384,6 +476,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         managers,
         addManager,
         resendActivation,
+        activateAccount,
+        activateManagerDirectly,
         toggleManagerStatus,
         activityLogs,
         requestPasswordReset,
