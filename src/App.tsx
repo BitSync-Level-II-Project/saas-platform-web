@@ -19,6 +19,7 @@ import type { ReviewStatus } from "./components/collected-data/collectedDataType
 import "./ModuleCompletion.css";
 
 // Deemantha's Warehouse Module (Module 2)
+import "./WarehouseModule.css";
 import WarehouseFilters from "./components/WarehouseFilters";
 import WarehouseTable from "./components/WarehouseTable";
 import WarehouseDetail from "./components/WarehouseDetail";
@@ -276,9 +277,11 @@ export default function App() {
       prev.map((t) => {
         const sub = submissions.find((s) => s.id === id);
         if (sub && t.code === sub.taskCode) {
+          const nextStatus: TaskStatus =
+            decision === "Approved" ? "Complete" : "In progress";
           return {
             ...t,
-            status: (decision === "Approved" ? "Completed" : "In Progress") as TaskStatus,
+            status: nextStatus,
           };
         }
         return t;
