@@ -1,0 +1,634 @@
+/* =========================================================
+   Warehouse Module (Module 2) Scoped Styles
+   Strictly scoped to avoid style leakage to Templates,
+   Collected Data, and Task Management.
+   ========================================================= */
+
+/* ----------------- Warehouse Table & Container ----------------- */
+.warehouses-section .table-container,
+.warehouse-detail-view .table-container {
+  background-color: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.warehouses-section .warehouse-table,
+.warehouse-detail-view .warehouse-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.warehouses-section .table-th,
+.warehouse-detail-view .table-th {
+  padding: 1rem 1.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+  background-color: #ffffff;
+}
+
+.warehouses-section .table-row,
+.warehouse-detail-view .table-row {
+  border-bottom: 1px solid #f8fafc;
+  transition: background-color 0.15s ease;
+}
+
+.warehouses-section .table-row:hover,
+.warehouse-detail-view .table-row:hover {
+  background-color: #fbfcfe;
+}
+
+.warehouses-section .table-td,
+.warehouse-detail-view .table-td {
+  padding: 1.25rem 1.75rem;
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.warehouses-section .warehouse-name,
+.warehouse-detail-view .warehouse-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.925rem;
+}
+
+.warehouses-section .warehouse-city,
+.warehouse-detail-view .warehouse-city {
+  font-size: 0.775rem;
+  color: #64748b;
+  margin-top: 0.2rem;
+}
+
+.warehouses-section .text-muted,
+.warehouse-detail-view .text-muted {
+  color: #475569;
+}
+
+.warehouses-section .text-dark,
+.warehouse-detail-view .text-dark {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.warehouses-section .text-right,
+.warehouse-detail-view .text-right {
+  text-align: right;
+}
+
+.warehouses-section .badge-active,
+.warehouse-detail-view .badge-active {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.warehouses-section .btn-open,
+.warehouse-detail-view .btn-open {
+  background: transparent;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  transition: opacity 0.15s;
+}
+
+.warehouses-section .btn-open:hover,
+.warehouse-detail-view .btn-open:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.warehouses-section .table-footer,
+.warehouse-detail-view .table-footer {
+  padding: 0.85rem 1.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+  border-top: 1px solid #f1f5f9;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.warehouses-section .table-footer-info,
+.warehouse-detail-view .table-footer-info {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.warehouses-section .pagination-controls,
+.warehouse-detail-view .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.warehouses-section .pagination-btn,
+.warehouse-detail-view .pagination-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0284c7;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.warehouses-section .pagination-btn:hover:not(:disabled),
+.warehouse-detail-view .pagination-btn:hover:not(:disabled) {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.warehouses-section .pagination-btn:disabled,
+.warehouse-detail-view .pagination-btn:disabled {
+  color: #94a3b8;
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.warehouses-section .pagination-info,
+.warehouse-detail-view .pagination-info {
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.warehouses-section .empty-state,
+.warehouse-detail-view .empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* ----------------- Filter Bar Styles ----------------- */
+.warehouses-section .filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.warehouses-section .filter-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.warehouses-section .search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.warehouses-section .search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.warehouses-section .search-input {
+  height: 42px;
+  width: 280px;
+  padding: 0 1rem 0 2.5rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.warehouses-section .search-input::placeholder {
+  color: #94a3b8;
+}
+
+.warehouses-section .search-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.warehouses-section .status-select {
+  height: 42px;
+  padding: 0 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.warehouses-section .status-select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.warehouses-section .btn-primary,
+.warehouse-detail-view .btn-primary,
+.warehouse-modal .btn-primary {
+  height: 42px;
+  padding: 0 1.5rem;
+  background-color: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.65rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warehouses-section .btn-primary:hover,
+.warehouse-detail-view .btn-primary:hover,
+.warehouse-modal .btn-primary:hover {
+  background-color: #4338ca;
+}
+
+/* ----------------- Warehouse Detail & Locations View ----------------- */
+.warehouse-detail-view {
+  width: 100%;
+}
+
+.warehouse-detail-view .location-scope-banner {
+  background-color: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  color: #0369a1;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.warehouse-detail-view .location-scope-badge {
+  background-color: #0284c7;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+}
+
+.warehouse-detail-view .back-link {
+  background: transparent;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s ease;
+}
+
+.warehouse-detail-view .back-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.warehouse-detail-view .detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+
+.warehouse-detail-view .detail-title {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.warehouse-detail-view .detail-subtitle {
+  font-size: 0.925rem;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+.warehouse-detail-view .btn-outline {
+  height: 40px;
+  padding: 0 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.warehouse-detail-view .btn-outline:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.warehouse-detail-view .detail-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eef2f6;
+}
+
+.warehouse-detail-view .detail-tabs {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.warehouse-detail-view .tab-item {
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.75rem 0.25rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.warehouse-detail-view .tab-item:hover {
+  color: #0f172a;
+}
+
+.warehouse-detail-view .tab-item.active {
+  color: #4f46e5;
+}
+
+.warehouse-detail-view .tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #4f46e5;
+  border-radius: 2px;
+}
+
+.warehouse-detail-view .location-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.925rem;
+}
+
+.warehouse-detail-view .location-desc {
+  font-size: 0.775rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.warehouse-detail-view .table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.warehouse-detail-view .btn-delete {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s;
+}
+
+.warehouse-detail-view .btn-delete:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.warehouse-detail-view .btn-danger-outline {
+  height: 42px;
+  padding: 0 1.25rem;
+  background-color: transparent;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.warehouse-detail-view .btn-danger-outline:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+
+/* ----------------- Warehouse Modals (Scoped) ----------------- */
+.warehouse-modal.modal-overlay,
+.warehouse-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.warehouse-modal .modal-card {
+  background-color: #ffffff;
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 500px;
+  padding: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: warehouseModalPop 0.15s ease-out;
+}
+
+@keyframes warehouseModalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.warehouse-modal .modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.warehouse-modal .modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.warehouse-modal .modal-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.warehouse-modal .modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.warehouse-modal .modal-close-btn:hover {
+  color: #0f172a;
+}
+
+.warehouse-modal .modal-error-banner {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.warehouse-modal .modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.warehouse-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.warehouse-modal .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.warehouse-modal .form-input {
+  height: 44px;
+  padding: 0 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.warehouse-modal .form-input::placeholder {
+  color: #94a3b8;
+}
+
+.warehouse-modal .form-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.warehouse-modal .form-select {
+  height: 44px;
+  padding: 0 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.warehouse-modal .form-select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.warehouse-modal .form-help {
+  font-size: 0.775rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+.warehouse-modal .modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.warehouse-modal .btn-cancel {
+  height: 42px;
+  padding: 0 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.warehouse-modal .btn-cancel:hover {
+  background-color: #f8fafc;
+}
