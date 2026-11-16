@@ -88,7 +88,7 @@ export default function EditWarehouseModal({
 
   return (
     <div
-      className="modal-overlay"
+      className="warehouse-modal modal-overlay"
       onClick={() => !isSubmitting && onClose()}
       role="dialog"
       aria-modal="true"

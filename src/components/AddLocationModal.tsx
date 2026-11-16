@@ -39,7 +39,7 @@ export default function AddLocationModal({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="warehouse-modal modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
