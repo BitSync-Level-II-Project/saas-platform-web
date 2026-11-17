@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Bell,
   ChartNoAxesColumn,
   ClipboardList,
   FileText,
+  History,
   House,
   LogOut,
   UsersRound,
@@ -42,6 +44,19 @@ import type { Submission } from "./components/submissionTypes";
 import { ReviewContext } from "./components/reviewContext";
 import type { ReviewEvent } from "./components/reviewContext";
 
+// Alerts, Notifications & Audit Log Module (Module 5)
+import { canViewAudit } from "./components/alerts/lib/permissions";
+import type { AlertsTab, Nav } from "./components/alerts/navigation";
+import { AlertBanner } from "./components/alerts/parts/AlertBanner";
+import { NotificationBell } from "./components/alerts/parts/NotificationBell";
+import { Toaster } from "./components/alerts/parts/Toaster";
+import { AlertDetailsPage } from "./components/alerts/pages/AlertDetailsPage";
+import { AlertsPage } from "./components/alerts/pages/AlertsPage";
+import { AuditLogPage } from "./components/alerts/pages/AuditLogPage";
+import { NotificationsPage } from "./components/alerts/pages/NotificationsPage";
+import { RuleEditorPage } from "./components/alerts/pages/RuleEditorPage";
+import { useSessionUser } from "./components/alerts/session";
+
 type Page =
   | "overview"
   | "supervisors"
@@ -50,7 +65,12 @@ type Page =
   | "tasks"
   | "create"
   | "details"
-  | "collected";
+  | "collected"
+  | "alerts"
+  | "alert-details"
+  | "rule-editor"
+  | "audit"
+  | "notifications";
 
 const menuItems = [
   { label: "Overview", icon: House },
@@ -60,6 +80,7 @@ const menuItems = [
   { label: "Tasks", icon: ClipboardList },
   { label: "Collected data", icon: ChartNoAxesColumn },
   { label: "Alerts", icon: Bell },
+  { label: "Audit log", icon: History },
 ];
 
 const PAGE_OF: Record<string, Page> = {
@@ -69,12 +90,24 @@ const PAGE_OF: Record<string, Page> = {
   Templates: "templates",
   Tasks: "tasks",
   "Collected data": "collected",
+  Alerts: "alerts",
+  "Audit log": "audit",
 };
 
-export default function App() {
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+});
+
+function Shell() {
   const [page, setPage] = useState<Page>("warehouses");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [isTemplateEditing, setIsTemplateEditing] = useState(false);
+
+  // Alerts, Rules, Notifications & Audit Log navigation state
+  const sessionUser = useSessionUser();
+  const [alertsTab, setAlertsTab] = useState<AlertsTab | undefined>(undefined);
+  const [selectedAlertId, setSelectedAlertId] = useState<string>("");
+  const [editingRuleId, setEditingRuleId] = useState<string | undefined>(undefined);
 
   // Collected data module
   const [records, setRecords] = useState(sampleCollectedRecords);
@@ -110,7 +143,6 @@ export default function App() {
       )
       .then((data) => {
         if (!isCancelled) {
-          // If deletion on the last page leaves current page out of bounds, clamp to the last valid page
           if (data.total > 0 && warehousePage > data.totalPages) {
             setWarehousePage(data.totalPages);
             return;
@@ -172,8 +204,6 @@ export default function App() {
       if (selectedWarehouse && selectedWarehouse.id === warehouse.id) {
         setSelectedWarehouse(null);
       }
-      // If deleting the only record on the current page (beyond page 1),
-      // navigate back to the previous valid page.
       if (warehouses.length === 1 && warehousePage > 1) {
         setWarehousePage((prev) => Math.max(1, prev - 1));
       } else {
@@ -318,14 +348,57 @@ export default function App() {
     );
   }
 
+  // Alerts module navigation (respects Template editor unsaved-change lock)
+  const alertsNav: Nav = {
+    openAlerts: (tab) => {
+      if (isTemplateEditing) return;
+      setAlertsTab(tab);
+      setPage("alerts");
+      window.scrollTo(0, 0);
+    },
+    openAlert: (id) => {
+      if (isTemplateEditing) return;
+      setSelectedAlertId(id);
+      setPage("alert-details");
+      window.scrollTo(0, 0);
+    },
+    openRule: (id) => {
+      if (isTemplateEditing) return;
+      setEditingRuleId(id);
+      setPage("rule-editor");
+      window.scrollTo(0, 0);
+    },
+    openAudit: () => {
+      if (isTemplateEditing) return;
+      setPage("audit");
+      window.scrollTo(0, 0);
+    },
+    openNotifications: () => {
+      if (isTemplateEditing) return;
+      setPage("notifications");
+      window.scrollTo(0, 0);
+    },
+  };
+
   const current = page === "details" ? tasks.find((t) => t.id === taskId) : undefined;
-  const activePage: Page = page === "create" || page === "details" ? "tasks" : page;
+  const activePage: Page =
+    page === "create" || page === "details"
+      ? "tasks"
+      : page === "alert-details" || page === "rule-editor" || page === "notifications"
+        ? "alerts"
+        : page;
   const isM4Page =
     page === "overview" ||
     page === "supervisors" ||
     page === "tasks" ||
     page === "create" ||
     page === "details";
+  const isAlertsPage =
+    page === "alerts" ||
+    page === "alert-details" ||
+    page === "rule-editor" ||
+    page === "audit" ||
+    page === "notifications";
 
   return (
     <ReviewContext.Provider value={{ history, reassign: reassignSubmission }}>
@@ -348,16 +421,21 @@ export default function App() {
 
               if (target) {
                 const isActive = activePage === target;
+                const isAuditRestricted =
+                  target === "audit" && !canViewAudit(sessionUser.role);
                 return (
                   <button
                     key={item.label}
                     type="button"
                     className={`nav-item ${isActive ? "nav-item--active" : ""}`}
                     aria-current={isActive ? "page" : undefined}
-                    disabled={isTemplateEditing}
+                    disabled={isTemplateEditing || isAuditRestricted}
                     onClick={() => {
                       if (target === "warehouses") {
                         setSelectedWarehouse(null);
+                      }
+                      if (target === "alerts") {
+                        setAlertsTab(undefined);
                       }
                       setPage(target);
                     }}
@@ -402,10 +480,22 @@ export default function App() {
             </div>
 
             <div className="topbar-actions">
-              <Bell size={18} strokeWidth={1.8} aria-label="Notifications" />
+              {page === "alerts" && (
+                <button
+                  type="button"
+                  className="al-link-btn"
+                  disabled={isTemplateEditing}
+                  onClick={alertsNav.openNotifications}
+                >
+                  Notifications
+                </button>
+              )}
+              <NotificationBell nav={alertsNav} />
               <span className="avatar">DW</span>
             </div>
           </header>
+
+          <AlertBanner nav={alertsNav} />
 
           <main className="content">
             {/* TAB 1: TEMPLATES (Damith's Encapsulated Module) */}
@@ -561,9 +651,47 @@ export default function App() {
                 )}
               </div>
             )}
+
+            {/* TAB 5: ALERTS, RULES, NOTIFICATIONS & AUDIT LOG (Module 5) */}
+            {isAlertsPage && (
+              <div className="alerts-module">
+                {page === "alerts" && (
+                  <AlertsPage
+                    key={alertsTab ?? "alerts"}
+                    nav={alertsNav}
+                    initialTab={alertsTab}
+                  />
+                )}
+                {page === "alert-details" && (
+                  <AlertDetailsPage
+                    key={selectedAlertId}
+                    id={selectedAlertId}
+                    nav={alertsNav}
+                  />
+                )}
+                {page === "rule-editor" && (
+                  <RuleEditorPage
+                    key={editingRuleId ?? "new"}
+                    id={editingRuleId}
+                    nav={alertsNav}
+                  />
+                )}
+                {page === "audit" && <AuditLogPage nav={alertsNav} />}
+                {page === "notifications" && <NotificationsPage nav={alertsNav} />}
+              </div>
+            )}
           </main>
         </div>
+        <Toaster />
       </div>
     </ReviewContext.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Shell />
+    </QueryClientProvider>
   );
 }
