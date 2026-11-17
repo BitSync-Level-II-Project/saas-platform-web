@@ -46,19 +46,19 @@ export function NotificationBell({ nav }: { nav: Nav }) {
   return (
     <div className="al-bellwrap" ref={wrapRef}>
       <button
-        type="button" className="bell" aria-haspopup="true" aria-expanded={open}
+        type="button" className="al-bell" aria-haspopup="true" aria-expanded={open}
         aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
         onClick={() => setOpen((o) => !o)}
       >
         <Bell size={22} />
-        {count > 0 && <i className="bell-dot" />}
+        {count > 0 && <i className="al-bell-dot" />}
       </button>
 
       {open && (
         <div className="al-dropdown" role="region" aria-label="Latest notifications">
           <div className="al-dropdown-head">
             <strong>Notifications</strong>
-            <button type="button" className="link-btn al-small-text" disabled={count === 0 || markAll.isPending} onClick={() => markAll.mutate()}>
+            <button type="button" className="al-link-btn al-small-text" disabled={count === 0 || markAll.isPending} onClick={() => markAll.mutate()}>
               Mark all as read
             </button>
           </div>

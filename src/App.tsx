@@ -393,6 +393,12 @@ function Shell() {
     page === "tasks" ||
     page === "create" ||
     page === "details";
+  const isAlertsPage =
+    page === "alerts" ||
+    page === "alert-details" ||
+    page === "rule-editor" ||
+    page === "audit" ||
+    page === "notifications";
 
   return (
     <ReviewContext.Provider value={{ history, reassign: reassignSubmission }}>
@@ -477,7 +483,7 @@ function Shell() {
               {page === "alerts" && (
                 <button
                   type="button"
-                  className="link-btn"
+                  className="al-link-btn"
                   disabled={isTemplateEditing}
                   onClick={alertsNav.openNotifications}
                 >
@@ -647,29 +653,33 @@ function Shell() {
             )}
 
             {/* TAB 5: ALERTS, RULES, NOTIFICATIONS & AUDIT LOG (Module 5) */}
-            {page === "alerts" && (
-              <AlertsPage
-                key={alertsTab ?? "alerts"}
-                nav={alertsNav}
-                initialTab={alertsTab}
-              />
+            {isAlertsPage && (
+              <div className="alerts-module">
+                {page === "alerts" && (
+                  <AlertsPage
+                    key={alertsTab ?? "alerts"}
+                    nav={alertsNav}
+                    initialTab={alertsTab}
+                  />
+                )}
+                {page === "alert-details" && (
+                  <AlertDetailsPage
+                    key={selectedAlertId}
+                    id={selectedAlertId}
+                    nav={alertsNav}
+                  />
+                )}
+                {page === "rule-editor" && (
+                  <RuleEditorPage
+                    key={editingRuleId ?? "new"}
+                    id={editingRuleId}
+                    nav={alertsNav}
+                  />
+                )}
+                {page === "audit" && <AuditLogPage nav={alertsNav} />}
+                {page === "notifications" && <NotificationsPage nav={alertsNav} />}
+              </div>
             )}
-            {page === "alert-details" && (
-              <AlertDetailsPage
-                key={selectedAlertId}
-                id={selectedAlertId}
-                nav={alertsNav}
-              />
-            )}
-            {page === "rule-editor" && (
-              <RuleEditorPage
-                key={editingRuleId ?? "new"}
-                id={editingRuleId}
-                nav={alertsNav}
-              />
-            )}
-            {page === "audit" && <AuditLogPage nav={alertsNav} />}
-            {page === "notifications" && <NotificationsPage nav={alertsNav} />}
           </main>
         </div>
         <Toaster />
