@@ -1,0 +1,97 @@
+.template-unsaved-dialog {
+    box-sizing: border-box;
+    width: min(520px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    padding: 28px;
+    overflow-y: auto;
+    color: #20223d;
+    color-scheme: light;
+    background: #fff;
+    border: 1px solid #dce1ed;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgb(32 34 61 / 20%);
+    font: inherit;
+    text-align: left;
+}
+
+.template-unsaved-dialog::backdrop {
+    background: rgb(24 28 49 / 50%);
+}
+
+.template-unsaved-dialog h2 {
+    margin: 0;
+    color: #20223d;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.template-unsaved-dialog p {
+    margin: 12px 0 0;
+    color: #727b95;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.template-unsaved-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.template-unsaved-dialog__actions button {
+    padding: 11px 16px;
+    color: #20223d;
+    background: #fff;
+    border: 1px solid #dce1ed;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.template-unsaved-dialog__actions button:hover {
+    background: #f5f6fa;
+}
+
+.template-unsaved-dialog__actions .template-unsaved-dialog__discard {
+    color: #b42318;
+}
+
+.template-unsaved-dialog__actions .template-unsaved-dialog__save {
+    color: #fff;
+    background: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.template-unsaved-dialog__actions .template-unsaved-dialog__save:hover {
+    background: #4338ca;
+}
+
+.template-unsaved-dialog button:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 3px;
+}
+
+.template-builder__unsaved {
+    color: #727b95;
+    font-size: 11px;
+}
+
+@media (max-width: 480px) {
+    .template-unsaved-dialog {
+        padding: 20px;
+    }
+
+    .template-unsaved-dialog__actions {
+        flex-direction: column;
+    }
+
+    .template-unsaved-dialog__actions button {
+        width: 100%;
+    }
+}
