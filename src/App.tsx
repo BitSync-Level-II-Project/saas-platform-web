@@ -512,10 +512,7 @@ function Shell() {
             {page === "warehouses" &&
               (selectedWarehouse ? (
                 <WarehouseDetail
-                  warehouse={{
-                    ...selectedWarehouse,
-                    locations: warehouseService.getLocations(selectedWarehouse.id).length,
-                  }}
+                  warehouse={selectedWarehouse}
                   onBack={() => {
                     setSelectedWarehouse(null);
                     triggerRefresh();

@@ -54,7 +54,7 @@ export const warehouseService = {
       ...(data as PaginatedWarehousesResponse),
       items: (data.items as Warehouse[]).map((w) => ({
         ...w,
-        locations: warehouseService.getLocations(w.id).length,
+        locations: w.locations ?? 0,
       })),
     };
   },
