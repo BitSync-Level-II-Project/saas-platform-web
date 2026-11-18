@@ -505,7 +505,8 @@
   color: #b91c1c;
 }
 
-.warehouse-detail-view .btn-danger-outline {
+.warehouse-detail-view .btn-danger-outline,
+.warehouse-modal .btn-danger-outline {
   height: 42px;
   padding: 0 1.25rem;
   background-color: transparent;
@@ -520,7 +521,8 @@
   align-items: center;
 }
 
-.warehouse-detail-view .btn-danger-outline:hover {
+.warehouse-detail-view .btn-danger-outline:hover,
+.warehouse-modal .btn-danger-outline:hover {
   background-color: #fef2f2;
   border-color: #ef4444;
   color: #b91c1c;

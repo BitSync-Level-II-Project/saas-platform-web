@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { warehouseService } from '../services/warehouseService';
 import { locationService } from '../services/locationService';
 import AddLocationModal from './AddLocationModal';
+import EditLocationModal from './EditLocationModal';
 import EditWarehouseModal from './EditWarehouseModal';
 import type { Warehouse, Location } from '../types';
 
@@ -30,6 +31,7 @@ export default function WarehouseDetail({
   const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
   const [isEditWarehouseModalOpen, setIsEditWarehouseModalOpen] =
     useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
 
   // 3. Trigger reload of locations
   const reloadLocations = useCallback(() => {
@@ -90,6 +92,37 @@ export default function WarehouseDetail({
   ) => {
     const updated = await warehouseService.updateWarehouse(id, updatedData);
     onWarehouseUpdated?.(updated);
+  };
+
+  // 7. Handler to update location
+  const handleUpdateLocation = async (
+    id: string,
+    data: {
+      name: string;
+      description?: string | null;
+      status: 'Active' | 'Inactive';
+    },
+  ) => {
+    await locationService.updateLocation(warehouse.id, id, data);
+    reloadLocations();
+  };
+
+  // 8. Handler to delete location
+  const handleDeleteLocation = async (loc: Location) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${loc.name}"? This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await locationService.deleteLocation(warehouse.id, loc.id);
+      reloadLocations();
+      onLocationAdded?.();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete location';
+      setError(message);
+    }
   };
 
   return (
@@ -205,14 +238,13 @@ export default function WarehouseDetail({
                     </span>
                   </td>
 
-                  {/* Edit Action (Disabled placeholder until Micro-Commit 4.4) */}
+                  {/* Edit Action Button */}
                   <td className="table-td text-right">
                     <button
                       className="btn-open"
                       type="button"
-                      disabled
-                      title="Editing locations will be enabled in Micro-Commit 4.4"
-                      style={{ opacity: 0.4, cursor: 'not-allowed' }}
+                      onClick={() => setEditingLocation(loc)}
+                      title="Edit capture location"
                     >
                       Edit
                     </button>
@@ -250,6 +282,19 @@ export default function WarehouseDetail({
         onClose={() => setIsAddLocationModalOpen(false)}
         onAddLocation={handleAddLocation}
       />
+
+      {/* Edit Location Modal */}
+      {editingLocation && (
+        <EditLocationModal
+          key={`${editingLocation.id}-${editingLocation.updatedAt || ''}`}
+          isOpen={Boolean(editingLocation)}
+          location={editingLocation}
+          warehouseName={warehouse.name}
+          onClose={() => setEditingLocation(null)}
+          onUpdateLocation={handleUpdateLocation}
+          onDeleteLocation={handleDeleteLocation}
+        />
+      )}
     </div>
   );
 }
