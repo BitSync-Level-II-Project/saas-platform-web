@@ -1,4 +1,6 @@
 import type { Warehouse, Location } from '../types';
+export { locationService } from './locationService';
+export type { CreateLocationInput, UpdateLocationInput } from './locationService';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, '') ||

@@ -13,8 +13,11 @@ export interface Warehouse {
 export interface Location {
   id: string;
   warehouseId: string;
+  organizationId?: string;
   name: string;
-  description?: string;
-  assignedWork: string;
+  description?: string | null;
+  assignedWork?: string | null;
   status: 'Active' | 'Inactive';
+  createdAt?: string;
+  updatedAt?: string;
 }
