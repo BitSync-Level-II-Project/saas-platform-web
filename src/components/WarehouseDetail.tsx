@@ -69,18 +69,12 @@ export default function WarehouseDetail({
     name: string;
     description?: string;
   }) => {
-    try {
-      await locationService.createLocation(warehouse.id, {
-        name: data.name,
-        description: data.description,
-      });
-      reloadLocations();
-      onLocationAdded?.();
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to create location';
-      setError(message);
-    }
+    await locationService.createLocation(warehouse.id, {
+      name: data.name,
+      description: data.description,
+    });
+    reloadLocations();
+    onLocationAdded?.();
   };
 
   // 6. Handler to update warehouse
