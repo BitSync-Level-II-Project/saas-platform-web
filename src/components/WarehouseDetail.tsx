@@ -127,8 +127,12 @@ export default function WarehouseDetail({
 
   return (
     <div className="warehouse-detail-view">
-      {/* Back navigation link */}
-      <button className="back-link" onClick={onBack} type="button">
+      {/* Back navigation link matching Template Creation */}
+      <button
+        className="back-link"
+        onClick={onBack}
+        type="button"
+      >
         ← Warehouses
       </button>
 

@@ -91,8 +91,11 @@ export default function AddLocationModal({
         <form onSubmit={handleSubmit} className="modal-form">
           {/* Location Name */}
           <div className="form-group">
-            <label className="form-label">Location name</label>
+            <label className="form-label" htmlFor="location-name">
+              Location name
+            </label>
             <input
+              id="location-name"
               type="text"
               className="form-input"
               placeholder="Packing area"
@@ -108,8 +111,11 @@ export default function AddLocationModal({
 
           {/* Description (Optional) */}
           <div className="form-group">
-            <label className="form-label">Description (optional)</label>
+            <label className="form-label" htmlFor="location-description">
+              Description (optional)
+            </label>
             <input
+              id="location-description"
               type="text"
               className="form-input"
               placeholder="Ground floor, east wing"
