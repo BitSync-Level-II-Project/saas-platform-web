@@ -33,7 +33,7 @@ export default function WarehouseTable({
             <th className="table-th">Locations</th>
             <th className="table-th">Supervisor</th>
             <th className="table-th">Status</th>
-            <th className="table-th text-right">Actions</th>
+            <th className="table-th text-right"></th>
           </tr>
         </thead>
         <tbody>
@@ -64,7 +64,13 @@ export default function WarehouseTable({
 
                 {/* Status Badge */}
                 <td className="table-td">
-                  <span className="badge-active">
+                  <span
+                    className={
+                      warehouse.status === 'Active'
+                        ? 'badge-active'
+                        : 'badge-inactive'
+                    }
+                  >
                     {warehouse.status}
                   </span>
                 </td>
@@ -79,14 +85,16 @@ export default function WarehouseTable({
                     >
                       Open
                     </button>
-                    <button
-                      className="btn-delete"
-                      onClick={() => onDeleteWarehouse?.(warehouse)}
-                      type="button"
-                      title="Delete warehouse"
-                    >
-                      Delete
-                    </button>
+                    {onDeleteWarehouse && (
+                      <button
+                        className="btn-delete"
+                        onClick={() => onDeleteWarehouse(warehouse)}
+                        type="button"
+                        title="Delete warehouse"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -98,8 +106,8 @@ export default function WarehouseTable({
       {/* Record Counter & Pagination Controls Footer */}
       <div className="table-footer">
         <div className="table-footer-info">
-          {total === 0
-            ? '0 records'
+          {totalPages <= 1
+            ? `${total} ${total === 1 ? 'record' : 'records'}`
             : `Showing ${startRecord}–${endRecord} of ${total} records`}
         </div>
 

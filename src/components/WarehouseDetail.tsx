@@ -156,8 +156,10 @@ export default function WarehouseDetail({
             Locations
           </button>
         </div>
+      </div>
 
-        {/* Add Location Primary Button */}
+      {/* Action Row Aligned Right above table */}
+      <div className="detail-action-bar">
         <button
           className="btn-primary"
           onClick={() => setIsAddLocationModalOpen(true)}
@@ -238,16 +240,26 @@ export default function WarehouseDetail({
                     </span>
                   </td>
 
-                  {/* Edit Action Button */}
+                  {/* Actions: Edit & Delete */}
                   <td className="table-td text-right">
-                    <button
-                      className="btn-open"
-                      type="button"
-                      onClick={() => setEditingLocation(loc)}
-                      title="Edit capture location"
-                    >
-                      Edit
-                    </button>
+                    <div className="table-actions">
+                      <button
+                        className="btn-open"
+                        type="button"
+                        onClick={() => setEditingLocation(loc)}
+                        title="Edit capture location"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn-delete"
+                        type="button"
+                        onClick={() => void handleDeleteLocation(loc)}
+                        title="Delete capture location"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

@@ -526,20 +526,9 @@ function Shell() {
                 />
               ) : (
                 <section className="warehouses-section">
-                  <header
-                    className="page-header"
-                    style={{ marginBottom: "1.5rem" }}
-                  >
-                    <h1
-                      className="page-title"
-                      style={{ fontSize: "1.5rem", fontWeight: 700 }}
-                    >
-                      Warehouses
-                    </h1>
-                    <p
-                      className="page-subtitle"
-                      style={{ color: "#64748B", fontSize: "0.875rem" }}
-                    >
+                  <header className="page-header">
+                    <h1 className="page-title">Warehouses</h1>
+                    <p className="page-subtitle">
                       Manage warehouses and their locations.
                     </p>
                   </header>

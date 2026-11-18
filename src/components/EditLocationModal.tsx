@@ -178,7 +178,7 @@ export default function EditLocationModal({
             {onDeleteLocation ? (
               <button
                 type="button"
-                className="btn-danger-outline"
+                className="btn-delete-link"
                 disabled={isSubmitting}
                 onClick={() => {
                   onClose();

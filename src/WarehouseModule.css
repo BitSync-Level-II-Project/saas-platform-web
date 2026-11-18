@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 /* =========================================================
    Warehouse Module (Module 2) Scoped Styles
    Aligned with Figma Design: Field Operations — Web UI
@@ -8,17 +10,36 @@
 .warehouse-detail-view,
 .warehouse-modal {
   color-scheme: light;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ----------------- Page Header ----------------- */
+.warehouses-section .page-header {
+  margin-bottom: 1.5rem;
+}
+
+.warehouses-section .page-title {
+  font-size: 1.875rem; /* 30px */
+  font-weight: 700;
+  color: #101828;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.35rem 0;
+}
+
+.warehouses-section .page-subtitle {
+  font-size: 0.875rem;
+  color: #475467;
+  margin: 0;
 }
 
 /* ----------------- Warehouse Table & Container ----------------- */
 .warehouses-section .table-container,
 .warehouse-detail-view .table-container {
   background-color: #ffffff;
-  border: 1px solid #e4e7ec;
+  border: 1px solid #eaecf0;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .warehouses-section .warehouse-table,
@@ -30,12 +51,12 @@
 
 .warehouses-section .table-th,
 .warehouse-detail-view .table-th {
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: #475467;
   border-bottom: 1px solid #eaecf0;
-  background-color: #f9fafb;
+  background-color: #ffffff;
   letter-spacing: 0.02em;
 }
 
@@ -52,7 +73,7 @@
 
 .warehouses-section .table-td,
 .warehouse-detail-view .table-td {
-  padding: 1rem 1.5rem;
+  padding: 1.125rem 1.5rem;
   font-size: 0.875rem;
   vertical-align: middle;
 }
@@ -122,8 +143,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
+  padding: 0;
   transition: opacity 0.15s;
 }
 
@@ -133,9 +153,30 @@
   text-decoration: underline;
 }
 
+.warehouses-section .btn-delete,
+.warehouse-detail-view .btn-delete,
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: #dc2626 !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 1rem;
+  transition: opacity 0.15s ease;
+}
+
+.warehouses-section .btn-delete:hover,
+.warehouse-detail-view .btn-delete:hover,
+.btn-delete:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 .warehouses-section .table-footer,
 .warehouse-detail-view .table-footer {
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   font-size: 0.8125rem;
   color: #475467;
   font-weight: 500;
@@ -217,23 +258,10 @@
   gap: 0.75rem;
 }
 
-.warehouses-section .search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.warehouses-section .search-icon {
-  position: absolute;
-  left: 0.85rem;
-  color: #98a2b3;
-  pointer-events: none;
-}
-
 .warehouses-section .search-input {
-  height: 40px;
-  width: 280px;
-  padding: 0 1rem 0 2.5rem;
+  height: 44px;
+  width: 320px;
+  padding: 0 1rem;
   background-color: #ffffff;
   border: 1px solid #d0d5dd;
   border-radius: 0.5rem;
@@ -253,8 +281,9 @@
 }
 
 .warehouses-section .status-select {
-  height: 40px;
-  padding: 0 1.25rem;
+  height: 44px;
+  width: 180px;
+  padding: 0 1rem;
   background-color: #ffffff;
   border: 1px solid #d0d5dd;
   border-radius: 0.5rem;
@@ -273,7 +302,7 @@
 .warehouses-section .btn-primary,
 .warehouse-detail-view .btn-primary,
 .warehouse-modal .btn-primary {
-  height: 40px;
+  height: 44px;
   padding: 0 1.25rem;
   background-color: #4f46e5;
   color: #ffffff;
@@ -304,31 +333,6 @@
 /* ----------------- Warehouse Detail & Locations View ----------------- */
 .warehouse-detail-view {
   width: 100%;
-}
-
-.warehouse-detail-view .location-scope-banner {
-  background-color: #f0f9ff;
-  border: 1px solid #e0f2fe;
-  color: #0369a1;
-  padding: 0.75rem 1rem;
-  border-radius: 0.65rem;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
-
-.warehouse-detail-view .location-scope-badge {
-  background-color: #0284c7;
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  white-space: nowrap;
 }
 
 .warehouse-detail-view .location-error-banner {
@@ -407,20 +411,21 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .warehouse-detail-view .detail-title {
-  font-size: 1.5rem;
+  font-size: 1.875rem; /* 30px */
   font-weight: 700;
   color: #101828;
   letter-spacing: -0.02em;
+  margin: 0 0 0.35rem 0;
 }
 
 .warehouse-detail-view .detail-subtitle {
   font-size: 0.875rem;
   color: #475467;
-  margin-top: 0.25rem;
+  margin: 0;
 }
 
 .warehouse-detail-view .btn-outline {
@@ -442,11 +447,8 @@
 }
 
 .warehouse-detail-view .detail-tabs-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #eef2f6;
+  border-bottom: 1px solid #eaecf0;
 }
 
 .warehouse-detail-view .detail-tabs {
@@ -457,17 +459,17 @@
 .warehouse-detail-view .tab-item {
   background: transparent;
   border: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
-  padding: 0.75rem 0.25rem;
+  color: #475467;
+  padding: 0.5rem 0.25rem 0.75rem;
   cursor: pointer;
   position: relative;
   transition: color 0.15s ease;
 }
 
 .warehouse-detail-view .tab-item:hover {
-  color: #0f172a;
+  color: #101828;
 }
 
 .warehouse-detail-view .tab-item.active {
@@ -485,6 +487,13 @@
   border-radius: 2px;
 }
 
+.warehouse-detail-view .detail-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
 .warehouse-detail-view .location-name {
   font-weight: 600;
   color: #101828;
@@ -497,16 +506,6 @@
   color: #475467;
   margin-top: 0.15rem;
 }
-  color: #64748b;
-  margin-top: 0.15rem;
-}
-
-.warehouse-detail-view .table-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
 
 /* ----------------- Table Actions & Delete Button ----------------- */
 .warehouses-section .table-actions,
@@ -514,57 +513,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.warehouses-section .btn-delete,
-.warehouse-detail-view .btn-delete,
-.warehouse-modal .btn-delete,
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: #dc2626 !important;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  transition: all 0.15s;
-}
-
-.warehouses-section .btn-delete:hover,
-.warehouse-detail-view .btn-delete:hover,
-.warehouse-modal .btn-delete:hover,
-.btn-delete:hover {
-  background-color: #fee2e2;
-  color: #b91c1c !important;
-}
-
-.warehouses-section .btn-danger-outline,
-.warehouse-detail-view .btn-danger-outline,
-.warehouse-modal .btn-danger-outline,
-.btn-danger-outline {
-  height: 42px;
-  padding: 0 1.25rem;
-  background-color: #ffffff !important;
-  border: 1px solid #fca5a5 !important;
-  border-radius: 0.5rem;
-  color: #dc2626 !important;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-}
-
-.warehouses-section .btn-danger-outline:hover,
-.warehouse-detail-view .btn-danger-outline:hover,
-.warehouse-modal .btn-danger-outline:hover,
-.btn-danger-outline:hover {
-  background-color: #fef2f2 !important;
-  border-color: #ef4444 !important;
-  color: #b91c1c !important;
+  gap: 1rem;
 }
 
 /* ----------------- Warehouse Modals (Scoped) ----------------- */
@@ -575,22 +524,23 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.45);
+  background-color: rgba(16, 24, 40, 0.45);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 1.5rem;
+  color-scheme: light !important;
 }
 
 .warehouse-modal .modal-card {
-  background-color: #ffffff;
-  color-scheme: light;
+  background-color: #ffffff !important;
+  color-scheme: light !important;
   border-radius: 0.75rem;
   width: 100%;
-  max-width: 480px;
-  padding: 1.75rem 2rem;
+  max-width: 520px;
+  padding: 2rem 2rem 1.75rem;
   box-shadow: 0 20px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.05);
   animation: warehouseModalPop 0.15s ease-out;
 }
@@ -610,7 +560,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .warehouse-modal .modal-title {
@@ -618,6 +568,7 @@
   font-weight: 700;
   color: #101828;
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .warehouse-modal .modal-subtitle {
@@ -679,11 +630,14 @@
   height: 44px;
   padding: 0 0.875rem;
   background-color: #ffffff !important;
-  border: 1px solid #d0d5dd;
+  border: 1px solid #d0d5dd !important;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   color: #101828 !important;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  color-scheme: light !important;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -702,8 +656,8 @@
 
 .warehouse-modal .form-input:focus,
 .warehouse-modal textarea:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
 }
 
 .warehouse-modal .form-input:disabled,
@@ -712,32 +666,35 @@
   background-color: #f9fafb !important;
   color: #667085 !important;
   cursor: not-allowed;
-  border-color: #eaecf0;
+  border-color: #eaecf0 !important;
 }
 
 .warehouse-modal .form-select {
   height: 44px;
   padding: 0 0.875rem;
-  border: 1px solid #d0d5dd;
+  border: 1px solid #d0d5dd !important;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   color: #101828 !important;
   background-color: #ffffff !important;
   cursor: pointer;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  color-scheme: light !important;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .warehouse-modal .form-select:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
 }
 
 .warehouse-modal .form-select:disabled {
   background-color: #f9fafb !important;
   color: #667085 !important;
   cursor: not-allowed;
-  border-color: #eaecf0;
+  border-color: #eaecf0 !important;
 }
 
 .warehouse-modal .form-help {
@@ -755,12 +712,12 @@
 }
 
 .warehouse-modal .btn-cancel {
-  height: 40px;
-  padding: 0 1.15rem;
-  background-color: #ffffff;
-  border: 1px solid #d0d5dd;
+  height: 44px;
+  padding: 0 1.25rem;
+  background-color: #ffffff !important;
+  border: 1px solid #d0d5dd !important;
   border-radius: 0.5rem;
-  color: #344054;
+  color: #344054 !important;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -768,6 +725,22 @@
 }
 
 .warehouse-modal .btn-cancel:hover {
-  background-color: #f9fafb;
-  border-color: #cbd5e1;
+  background-color: #f9fafb !important;
+  border-color: #cbd5e1 !important;
+}
+
+.warehouse-modal .btn-delete-link {
+  background: transparent;
+  border: none;
+  color: #dc2626 !important;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s ease;
+}
+
+.warehouse-modal .btn-delete-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
 }
