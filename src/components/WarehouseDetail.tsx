@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { warehouseService } from '../services/warehouseService';
+import { locationService } from '../services/locationService';
 import AddLocationModal from './AddLocationModal';
 import EditWarehouseModal from './EditWarehouseModal';
 import type { Warehouse, Location } from '../types';
@@ -19,33 +20,70 @@ export default function WarehouseDetail({
   onWarehouseUpdated,
   onDeleteWarehouse,
 }: WarehouseDetailProps) {
-  // 1. Locations list for this warehouse
-  const [locations, setLocations] = useState<Location[]>(() =>
-    warehouseService.getLocations(warehouse.id),
-  );
+  // 1. Locations list & live state
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshIndex, setRefreshIndex] = useState(0);
 
   // 2. Modals state
   const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
   const [isEditWarehouseModalOpen, setIsEditWarehouseModalOpen] =
     useState(false);
 
-  // 3. Handler to add a new location
-  const handleAddLocation = (data: { name: string; description?: string }) => {
-    const newLoc: Location = {
-      id: Date.now().toString(),
-      warehouseId: warehouse.id,
-      name: data.name,
-      description: data.description,
-      assignedWork: '0 tasks',
-      status: 'Active',
-    };
+  // 3. Trigger reload of locations
+  const reloadLocations = useCallback(() => {
+    setIsLoading(true);
+    setRefreshIndex((prev) => prev + 1);
+  }, []);
 
-    const updated = warehouseService.addLocation(newLoc);
-    setLocations(updated);
-    onLocationAdded?.();
+  // 4. Fetch live locations from NestJS backend API with cancellation safety
+  useEffect(() => {
+    let isCancelled = false;
+
+    locationService
+      .getLocations(warehouse.id)
+      .then((data) => {
+        if (!isCancelled) {
+          setLocations(data);
+          setError(null);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!isCancelled) {
+          const message =
+            err instanceof Error ? err.message : 'Failed to load locations';
+          setError(message);
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [warehouse.id, refreshIndex]);
+
+  // 5. Handler to add a new location
+  const handleAddLocation = async (data: {
+    name: string;
+    description?: string;
+  }) => {
+    try {
+      await locationService.createLocation(warehouse.id, {
+        name: data.name,
+        description: data.description,
+      });
+      reloadLocations();
+      onLocationAdded?.();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to create location';
+      setError(message);
+    }
   };
 
-  // 4. Handler to update warehouse
+  // 6. Handler to update warehouse
   const handleUpdateWarehouse = async (
     id: string,
     updatedData: {
@@ -102,13 +140,19 @@ export default function WarehouseDetail({
         </button>
       </div>
 
-      {/* Local-only Locations Notice */}
-      <div className="location-scope-banner" role="note">
-        <span className="location-scope-badge">Local Preview</span>
-        <span>
-          Capture locations are currently saved in browser local storage. Database synchronization and editing will be enabled in Phase 3.
-        </span>
-      </div>
+      {/* Error Banner with Retry */}
+      {error && (
+        <div className="location-error-banner" role="alert">
+          <span>{error}</span>
+          <button
+            type="button"
+            className="btn-retry"
+            onClick={reloadLocations}
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Locations Table */}
       <div className="table-container">
@@ -122,7 +166,16 @@ export default function WarehouseDetail({
             </tr>
           </thead>
           <tbody>
-            {locations.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={4} className="empty-state">
+                  <div className="locations-loading">
+                    <span className="spinner" />
+                    <span>Loading capture locations...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : locations.length === 0 ? (
               <tr>
                 <td colSpan={4} className="empty-state">
                   No capture locations added yet. Click &quot;Add location&quot;
@@ -141,20 +194,30 @@ export default function WarehouseDetail({
                   </td>
 
                   {/* Assigned Work */}
-                  <td className="table-td text-muted">{loc.assignedWork}</td>
+                  <td className="table-td text-muted">
+                    {loc.assignedWork || '0 tasks'}
+                  </td>
 
                   {/* Status Badge */}
                   <td className="table-td">
-                    <span className="badge-active">{loc.status}</span>
+                    <span
+                      className={
+                        loc.status === 'Active'
+                          ? 'badge-active'
+                          : 'badge-inactive'
+                      }
+                    >
+                      {loc.status}
+                    </span>
                   </td>
 
-                  {/* Edit Action (Disabled placeholder until Phase 3) */}
+                  {/* Edit Action (Disabled placeholder until Micro-Commit 4.4) */}
                   <td className="table-td text-right">
                     <button
                       className="btn-open"
                       type="button"
                       disabled
-                      title="Editing locations will be enabled in Phase 3"
+                      title="Editing locations will be enabled in Micro-Commit 4.4"
                       style={{ opacity: 0.4, cursor: 'not-allowed' }}
                     >
                       Edit
@@ -168,7 +231,9 @@ export default function WarehouseDetail({
 
         {/* Record Counter Footer */}
         <div className="table-footer">
-          {locations.length} {locations.length === 1 ? 'record' : 'records'}
+          {isLoading
+            ? 'Loading records...'
+            : `${locations.length} ${locations.length === 1 ? 'record' : 'records'}`}
         </div>
       </div>
 
