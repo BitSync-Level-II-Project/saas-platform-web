@@ -706,3 +706,74 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Custom Delete Confirmation Modal                                           */
+/* -------------------------------------------------------------------------- */
+.warehouse-modal .confirm-delete-card {
+  width: min(480px, calc(100vw - 32px));
+}
+
+.confirm-delete-body {
+  margin-top: 8px;
+}
+
+.confirm-delete-message {
+  margin: 0;
+  color: #727b95;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.confirm-delete-item-name {
+  color: #20223d;
+  font-weight: 600;
+}
+
+.confirm-delete-warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.warehouse-modal .btn-danger-confirm {
+  height: 38px;
+  padding: 0 18px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.warehouse-modal .btn-danger-confirm:hover:not(:disabled) {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.warehouse-modal .btn-danger-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.warehouse-modal .btn-danger-confirm:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}

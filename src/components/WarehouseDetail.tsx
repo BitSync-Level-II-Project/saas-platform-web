@@ -4,6 +4,7 @@ import { locationService } from '../services/locationService';
 import AddLocationModal from './AddLocationModal';
 import EditLocationModal from './EditLocationModal';
 import EditWarehouseModal from './EditWarehouseModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import type { Warehouse, Location } from '../types';
 
 interface WarehouseDetailProps {
@@ -32,6 +33,9 @@ export default function WarehouseDetail({
   const [isEditWarehouseModalOpen, setIsEditWarehouseModalOpen] =
     useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
+  const [isDeletingLocation, setIsDeletingLocation] = useState(false);
+  const [deleteLocationError, setDeleteLocationError] = useState<string | null>(null);
 
   // 3. Trigger reload of locations
   const reloadLocations = useCallback(() => {
@@ -108,20 +112,27 @@ export default function WarehouseDetail({
   };
 
   // 8. Handler to delete location
-  const handleDeleteLocation = async (loc: Location) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${loc.name}"? This action cannot be undone.`,
-    );
-    if (!confirmed) return;
+  const handleDeleteLocation = (loc: Location) => {
+    setDeleteLocationError(null);
+    setLocationToDelete(loc);
+  };
+
+  const handleConfirmDeleteLocation = async () => {
+    if (!locationToDelete) return;
+    setIsDeletingLocation(true);
+    setDeleteLocationError(null);
 
     try {
-      await locationService.deleteLocation(warehouse.id, loc.id);
+      await locationService.deleteLocation(warehouse.id, locationToDelete.id);
       reloadLocations();
       onLocationAdded?.();
+      setLocationToDelete(null);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to delete location';
-      setError(message);
+      setDeleteLocationError(message);
+    } finally {
+      setIsDeletingLocation(false);
     }
   };
 
@@ -311,6 +322,23 @@ export default function WarehouseDetail({
           onDeleteLocation={handleDeleteLocation}
         />
       )}
+
+      {/* Custom Delete Confirmation Modal for Location */}
+      <ConfirmDeleteModal
+        isOpen={locationToDelete !== null}
+        title="Delete Location"
+        itemName={locationToDelete?.name || ''}
+        itemType="location"
+        isDeleting={isDeletingLocation}
+        errorMessage={deleteLocationError}
+        onConfirm={handleConfirmDeleteLocation}
+        onClose={() => {
+          if (!isDeletingLocation) {
+            setLocationToDelete(null);
+            setDeleteLocationError(null);
+          }
+        }}
+      />
     </div>
   );
 }
