@@ -15,7 +15,7 @@ import siteTraceLogo from "./assets/SiteTrace-logo.svg";
 import { TemplatesModule } from "./components/TemplateModule";
 import { CollectedDataPage } from "./components/collected-data/CollectedDataPage";
 import { sampleCollectedRecords } from "./components/collected-data/sampleCollectedRecords";
-import type { ReviewStatus } from "./components/collected-data/collectedDataTypes";
+import type { ReviewDecision } from "./components/collected-data/collectedDataTypes";
 import "./ModuleCompletion.css";
 
 import { OverviewPage } from "./components/OverviewPage";
@@ -92,13 +92,13 @@ function App() {
 
   async function reviewRecord(
     id: string,
-    reviewStatus: ReviewStatus,
+    reviewStatus: ReviewDecision,
     reviewNote: string,
   ): Promise<void> {
     const reviewedAt = new Date().toISOString();
     setRecords((current) =>
       current.map((record) =>
-        record.id === id
+        record.id === id && record.reviewStatus === "pending"
           ? { ...record, reviewStatus, reviewNote, reviewedAt }
           : record,
       ),

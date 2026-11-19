@@ -121,11 +121,6 @@
     background: #e7f3ec;
 }
 
-.collected-data__status--recheck-requested {
-    color: #4f46e5;
-    background: #eeecff;
-}
-
 .collected-data__status--rejected {
     color: #b42318;
     background: #fff1f0;

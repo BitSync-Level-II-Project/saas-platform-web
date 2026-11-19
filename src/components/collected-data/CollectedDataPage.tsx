@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   reviewLabels,
   type CollectedRecordSummary,
-  type ReviewStatus,
+  type ReviewDecision,
 } from "./collectedDataTypes";
 
 import { RecordDetailsModal } from "./RecordDetailsModal";
@@ -13,7 +13,7 @@ import "./CollectedDataPage.css";
 
 type CollectedDataPageProps = {
   records: CollectedRecordSummary[];
-  onReview: (id: string, status: ReviewStatus, note: string) => Promise<void>;
+  onReview: (id: string, status: ReviewDecision, note: string) => Promise<void>;
 };
 
 const receivedTimeFormatter = new Intl.DateTimeFormat("en-GB", {
