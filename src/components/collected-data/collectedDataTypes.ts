@@ -1,5 +1,6 @@
-export type ReviewStatus =
-  "pending" | "approved" | "recheck-requested" | "rejected";
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
+export type ReviewDecision = Exclude<ReviewStatus, "pending">;
 
 export type CollectedRecordSummary = {
   id: string;
@@ -35,6 +36,5 @@ export type RecordEvidence = {
 export const reviewLabels: Record<ReviewStatus, string> = {
   pending: "Pending review",
   approved: "Approved",
-  "recheck-requested": "Recheck requested",
   rejected: "Rejected",
 };
