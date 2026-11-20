@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { WAREHOUSES } from './taskTypes';
 import type { NewSupervisor, Supervisor, SupervisorStatus } from './supervisorTypes';
+import { warehouseService } from '../services/warehouseService';
+import type { Warehouse } from '../types';
 
 interface Props {
   supervisors: Supervisor[];
@@ -18,6 +20,27 @@ export function SupervisorsPage({ supervisors, onRegister, onSendActivation }: P
   const [form, setForm] = useState<NewSupervisor>(emptyForm);
   const [notice, setNotice] = useState('');
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    warehouseService
+      .getWarehouses('', 'Active', 1, 100)
+      .then((res) => {
+        if (isCancelled) return;
+        if (res.items && res.items.length > 0) {
+          setWarehouses(res.items);
+          setForm((prev) => ({
+            ...prev,
+            warehouse: res.items[0].name,
+          }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const q = search.toLowerCase();
   const visible = supervisors.filter(
@@ -89,7 +112,11 @@ export function SupervisorsPage({ supervisors, onRegister, onSendActivation }: P
                   <div className="task-title">{s.name}</div>
                   <div className="task-code">{s.email}</div>
                 </td>
-                <td>{s.warehouse} warehouse</td>
+                <td>
+                  {s.warehouse.toLowerCase().endsWith('warehouse')
+                    ? s.warehouse
+                    : `${s.warehouse} warehouse`}
+                </td>
                 <td><span className={`pill sup-${s.status.toLowerCase()}`}>{s.status}</span></td>
                 <td>
                   {s.status === 'Active' ? (
@@ -122,7 +149,14 @@ export function SupervisorsPage({ supervisors, onRegister, onSendActivation }: P
             <div className="data-list">
               <div className="data-row"><span>Role</span><strong>Supervisor</strong></div>
               <div className="data-row"><span>Work email</span><strong>{account.email}</strong></div>
-              <div className="data-row"><span>Warehouse</span><strong>{account.warehouse} warehouse</strong></div>
+              <div className="data-row">
+                <span>Warehouse</span>
+                <strong>
+                  {account.warehouse.toLowerCase().endsWith('warehouse')
+                    ? account.warehouse
+                    : `${account.warehouse} warehouse`}
+                </strong>
+              </div>
               <div className="data-row"><span>Status</span><strong>{account.status}</strong></div>
             </div>
             <div className="form-actions">
@@ -150,7 +184,19 @@ export function SupervisorsPage({ supervisors, onRegister, onSendActivation }: P
             <div className="field">
               <label>Warehouse</label>
               <select className="input" value={form.warehouse} onChange={(e) => setForm({ ...form, warehouse: e.target.value })}>
-                {WAREHOUSES.map((w) => <option key={w} value={w}>{w} warehouse</option>)}
+                {warehouses.length > 0
+                  ? warehouses.map((w) => (
+                      <option key={w.id} value={w.name}>
+                        {w.name.toLowerCase().endsWith('warehouse')
+                          ? w.name
+                          : `${w.name} warehouse`}
+                      </option>
+                    ))
+                  : WAREHOUSES.map((w) => (
+                      <option key={w} value={w}>
+                        {w} warehouse
+                      </option>
+                    ))}
               </select>
             </div>
             <p className="muted">Register first, then send the activation email.</p>

@@ -1,5 +1,3 @@
-import { Search } from 'lucide-react';
-
 interface WarehouseFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -20,16 +18,13 @@ export default function WarehouseFilters({
       {/* Left side: Search input and Status dropdown */}
       <div className="filter-left">
         {/* Search Input */}
-        <div className="search-box">
-          <Search size={18} className="search-icon" />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search warehouses"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search warehouses"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
 
         {/* Status Dropdown */}
         <select
@@ -44,7 +39,7 @@ export default function WarehouseFilters({
       </div>
 
       {/* Right side: Add warehouse button */}
-      <button className="btn-primary" onClick={onAddClick}>
+      <button className="btn-primary" onClick={onAddClick} type="button">
         Add warehouse
       </button>
     </div>
