@@ -21,9 +21,8 @@ export interface StationedPhone {
   available: boolean;
 }
 
-// Mock data; stationed devices belong to the sites and devices module.
+// Aligned with PostgreSQL registered warehouses & locations
 export const PHONES: StationedPhone[] = [
-  { id: 'p1', name: 'Colombo machine room phone', warehouse: 'Colombo', location: 'Machine room', sensors: 'Temperature probe and microphone', available: true },
-  { id: 'p2', name: 'Galle storage aisle phone', warehouse: 'Galle', location: 'Storage aisle', sensors: 'Humidity sensor', available: true },
-  { id: 'p3', name: 'Kandy loading bay phone', warehouse: 'Kandy', location: 'Loading bay', sensors: 'Motion sensor', available: false },
+  { id: 'p1', name: 'Colombo loading bay phone', warehouse: 'Colombo', location: 'Loading bay', sensors: 'Temperature probe and microphone', available: true },
+  { id: 'p2', name: 'Gampaha intake phone', warehouse: 'Gampaha', location: 'Main bay', sensors: 'Motion sensor', available: true },
 ];
