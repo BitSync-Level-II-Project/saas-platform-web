@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   reviewLabels,
   type CollectedRecordSummary,
-  type ReviewStatus,
+  type ReviewDecision,
 } from "./collectedDataTypes";
 
 import "./RecordDetailsModal.css";
@@ -12,7 +12,7 @@ import { RecordReviewPanel } from "./RecordReviewPanel";
 type RecordDetailsModalProps = {
   record: CollectedRecordSummary;
   onClose: () => void;
-  onReview: (id: string, status: ReviewStatus, note: string) => Promise<void>;
+  onReview: (id: string, status: ReviewDecision, note: string) => Promise<void>;
 };
 
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {

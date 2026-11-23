@@ -2,14 +2,12 @@ import { useRef, useState } from "react";
 import {
   reviewLabels,
   type CollectedRecordSummary,
-  type ReviewStatus,
+  type ReviewDecision,
 } from "./collectedDataTypes";
-
-type Decision = Exclude<ReviewStatus, "pending">;
 
 type Props = {
   record: CollectedRecordSummary;
-  onReview: (status: ReviewStatus, note: string) => Promise<void>;
+  onReview: (status: ReviewDecision, note: string) => Promise<void>;
 };
 
 const reviewedTimeFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -19,7 +17,7 @@ const reviewedTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export function RecordReviewPanel({ record, onReview }: Props) {
-  const [decision, setDecision] = useState<Decision>(
+  const [decision, setDecision] = useState<ReviewDecision>(
     record.reviewStatus === "pending" ? "approved" : record.reviewStatus,
   );
   const [note, setNote] = useState(record.reviewNote ?? "");
@@ -27,24 +25,24 @@ export function RecordReviewPanel({ record, onReview }: Props) {
   const saveLock = useRef(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const needsReason = decision !== "approved";
+  const canReview = record.reviewStatus === "pending";
+  const needsReason = decision === "rejected";
 
   async function saveReview() {
-    if (saveLock.current) return;
+    if (saveLock.current || !canReview) return;
     setError("");
     setMessage("");
 
-    if (needsReason && !note.trim()) {
-      setError(
-        "Enter a reason when requesting a recheck or rejecting a record.",
-      );
+    const trimmedNote = note.trim();
+    if (needsReason && !trimmedNote) {
+      setError("Enter a reason for rejecting this attempt.");
       return;
     }
 
     saveLock.current = true;
     setIsSaving(true);
     try {
-      await onReview(decision, note.trim());
+      await onReview(decision, trimmedNote);
       setMessage("Review saved for this session.");
     } catch (failure) {
       setError(
@@ -69,6 +67,7 @@ export function RecordReviewPanel({ record, onReview }: Props) {
         Reviews are a session preview. Refreshing the page resets these changes.
       </p>
 
+      <p>Status: {reviewLabels[record.reviewStatus]}</p>
       {record.reviewedAt && (
         <p>
           Last reviewed: {reviewLabels[record.reviewStatus]} ·{" "}
@@ -82,54 +81,53 @@ export function RecordReviewPanel({ record, onReview }: Props) {
         <p className="record-review__note">{record.reviewNote}</p>
       )}
 
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void saveReview();
-        }}
-      >
-        <fieldset className="record-review__controls" disabled={isSaving}>
-          <label htmlFor="review-decision">Decision</label>
-          <select
-            id="review-decision"
-            value={decision}
-            onChange={(event) => {
-              const value = event.currentTarget.value;
-              if (
-                value === "approved" ||
-                value === "recheck-requested" ||
-                value === "rejected"
-              ) {
-                setDecision(value);
-                setError("");
-                setMessage("");
-              }
-            }}
-          >
-            <option value="approved">Approve</option>
-            <option value="recheck-requested">Request recheck</option>
-            <option value="rejected">Reject</option>
-          </select>
+      {canReview ? (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveReview();
+          }}
+        >
+          <fieldset className="record-review__controls" disabled={isSaving}>
+            <label htmlFor="review-decision">Decision</label>
+            <select
+              id="review-decision"
+              value={decision}
+              onChange={(event) => {
+                const value = event.currentTarget.value;
+                if (value === "approved" || value === "rejected") {
+                  setDecision(value);
+                  setError("");
+                  setMessage("");
+                }
+              }}
+            >
+              <option value="approved">Approve</option>
+              <option value="rejected">Reject</option>
+            </select>
 
-          <label htmlFor="review-note">
-            {needsReason ? "Reason (required)" : "Review note (optional)"}
-          </label>
-          <textarea
-            id="review-note"
-            rows={3}
-            value={note}
-            required={needsReason}
-            aria-describedby={error ? "review-error" : undefined}
-            onChange={(event) => {
-              setNote(event.currentTarget.value);
-              setMessage("");
-            }}
-          />
-          <button className="tm-button tm-button--primary" type="submit">
-            {isSaving ? "Saving review…" : "Save review"}
-          </button>
-        </fieldset>
-      </form>
+            <label htmlFor="review-note">
+              {needsReason ? "Reason (required)" : "Review note (optional)"}
+            </label>
+            <textarea
+              id="review-note"
+              rows={3}
+              value={note}
+              required={needsReason}
+              aria-describedby={error ? "review-error" : undefined}
+              onChange={(event) => {
+                setNote(event.currentTarget.value);
+                setMessage("");
+              }}
+            />
+            <button className="tm-button tm-button--primary" type="submit">
+              {isSaving ? "Saving review…" : "Save review"}
+            </button>
+          </fieldset>
+        </form>
+      ) : (
+        <p>This attempt has been reviewed. Its decision is read-only.</p>
+      )}
 
       {error && (
         <p id="review-error" className="tm-error" role="alert">

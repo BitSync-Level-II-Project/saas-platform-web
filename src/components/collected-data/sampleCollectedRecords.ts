@@ -102,7 +102,8 @@ export const sampleCollectedRecords: CollectedRecordSummary[] = [
     source: 'worker',
     submittedAt: '2026-11-06T08:55:00+05:30',
     receivedAt: '2026-11-06T08:58:00+05:30',
-    reviewStatus: 'recheck-requested',
+    reviewStatus: 'rejected',
+    reviewNote: 'Describe the package damage more clearly.',
     answers: [
       {
         fieldId: 'product-code',
