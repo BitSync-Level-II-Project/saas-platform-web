@@ -40,7 +40,7 @@ function App() {
             <Route path="*" element={<Navigate to="/admin/overview" replace />} />
           </Route>
 
-          {/* Manager Viewpoint (M3 Templates, M4 Tasks Protected) */}
+          {/* Manager Viewpoint (M2 Warehouses, M3 Templates, M4 Tasks, M5 Alerts) */}
           <Route
             path="/manager/*"
             element={

@@ -35,3 +35,5 @@ export const Topbar: React.FC = () => {
     </header>
   );
 };
+
+export default Topbar;

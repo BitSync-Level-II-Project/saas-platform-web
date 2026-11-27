@@ -11,7 +11,7 @@ export interface SendActivationEmailParams {
   activationUrl: string;
 }
 
-const BACKEND_API_URL = 'http://localhost:3000/api/auth/invite-manager';
+const BACKEND_API_URL = 'http://localhost:3000/api/v1/auth/invite-manager';
 
 export const sendActivationEmail = async ({
   toEmail,

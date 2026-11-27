@@ -1,3 +1,5 @@
+export * from './warehouse';
+
 export type UserRole = 'COMPANY_ADMIN' | 'MANAGER' | 'SUPERVISOR' | 'WORKER';
 
 export type UserStatus = 'Active' | 'Pending' | 'Deactivated';
