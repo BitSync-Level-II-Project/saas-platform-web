@@ -48,14 +48,21 @@ export const ActivateAccountPage: React.FC = () => {
 
       setIsSuccess(true);
 
-      // Auto sign-in and redirect to Manager Portal
+      // Auto sign-in and redirect to appropriate portal
       setTimeout(async () => {
+        let destinationRole = res.role || 'MANAGER';
         try {
-          await login(workspaceCode, email, password);
+          const loginRes = await login(workspaceCode, email, password);
+          if (loginRes.role) destinationRole = loginRes.role as any;
         } catch {
           // already authenticated by activateAccount
         }
-        navigate('/manager');
+
+        if (destinationRole === 'COMPANY_ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/manager');
+        }
       }, 1000);
     } catch {
       setError('An unexpected error occurred during activation.');
@@ -72,7 +79,7 @@ export const ActivateAccountPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Activate Manager Account
+              Activate Account
             </h1>
             <p className="text-xs text-slate-500">
               Set your password to complete activation
@@ -154,7 +161,7 @@ export const ActivateAccountPage: React.FC = () => {
               disabled={isSubmitting}
               className="w-full bg-[#5542f6] hover:bg-[#4834e0] text-white font-medium py-3 rounded-xl text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50 mt-2"
             >
-              {isSubmitting ? 'Activating account...' : 'Activate & Sign In as Manager'}
+              {isSubmitting ? 'Activating account...' : 'Activate & Sign In'}
             </button>
           </form>
         )}

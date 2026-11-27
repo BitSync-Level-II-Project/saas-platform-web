@@ -1,19 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { User, Organization, ActivityLog } from '../types';
+import type { User, UserRole, Organization, ActivityLog } from '../types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
+  primaryAdmin: User | null;
   organization: Organization | null;
   token: string | null;
   login: (workspaceCode: string, email: string, password: string) => Promise<{ success: boolean; role?: string; error?: string }>;
   logout: () => void;
   registerOrganization: (orgData: { name: string; adminName: string; email: string; phone: string; password: string }) => { workspaceCode: string };
   updateOrganization: (updated: Partial<Organization>) => void;
+  updateAdminProfile: (data: { name: string; email: string; password?: string }) => { success: boolean; error?: string };
+  transferOwnership: (payload: {
+    type: 'existing';
+    userId: string;
+  } | {
+    type: 'new';
+    name: string;
+    email: string;
+  }) => { success: boolean; error?: string; activationUrl?: string; newAdminName?: string; newAdminEmail?: string };
   managers: User[];
   addManager: (name: string, email: string) => { id: string; email: string; name: string; workspaceCode: string; activationUrl: string };
   resendActivation: (id: string) => { email: string; name: string; workspaceCode: string; activationUrl: string } | null;
-  activateAccount: (workspaceCode: string, email: string, newPassword: string) => { success: boolean; error?: string };
+  activateAccount: (workspaceCode: string, email: string, newPassword: string) => { success: boolean; role?: UserRole; error?: string };
   activateManagerDirectly: (id: string) => void;
   toggleManagerStatus: (id: string) => void;
   activityLogs: ActivityLog[];
@@ -163,6 +173,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (!u.workspaceCode || u.workspaceCode.toUpperCase() === currentOrg.workspaceCode.toUpperCase())
   );
 
+  // Derived current primary admin for current workspace
+  const primaryAdmin =
+    users.find(
+      (u) =>
+        u.role === 'COMPANY_ADMIN' &&
+        (!u.workspaceCode || u.workspaceCode.toUpperCase() === currentOrg.workspaceCode.toUpperCase())
+    ) ||
+    (currentUser?.role === 'COMPANY_ADMIN' ? currentUser : null);
+
   // Normal, production-like authentication: detects user & role automatically from credentials
   const login = async (
     workspaceCode: string,
@@ -295,6 +314,175 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const updateAdminProfile = (data: {
+    name: string;
+    email: string;
+    password?: string;
+  }): { success: boolean; error?: string } => {
+    if (!currentUser) return { success: false, error: 'No active session.' };
+    const cleanName = data.name.trim();
+    const cleanEmail = data.email.trim().toLowerCase();
+
+    if (!cleanName || !cleanEmail) {
+      return { success: false, error: 'Name and email are required.' };
+    }
+
+    const updatedUser: User = {
+      ...currentUser,
+      name: cleanName,
+      email: cleanEmail,
+      avatarInitials:
+        cleanName
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase() || 'AD',
+      ...(data.password?.trim() ? { password: data.password.trim() } : {}),
+    };
+
+    setCurrentUser(updatedUser);
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updatedUser : u)));
+
+    if (currentUser.role === 'COMPANY_ADMIN') {
+      setCurrentOrg((prev) => ({ ...prev, contactEmail: cleanEmail }));
+    }
+
+    setActivityLogs((prev) => [
+      {
+        id: `log-${Date.now()}`,
+        memberName: cleanName,
+        memberRole: currentUser.role === 'COMPANY_ADMIN' ? 'Company Admin' : 'Manager',
+        activity: 'Administrator profile & credentials updated',
+        when: 'Just now',
+      },
+      ...prev,
+    ]);
+
+    return { success: true };
+  };
+
+  const transferOwnership = (payload: {
+    type: 'existing';
+    userId: string;
+  } | {
+    type: 'new';
+    name: string;
+    email: string;
+  }): { success: boolean; error?: string; activationUrl?: string; newAdminName?: string; newAdminEmail?: string } => {
+    const ws = currentOrg.workspaceCode;
+
+    if (payload.type === 'existing') {
+      const target = users.find((u) => u.id === payload.userId);
+      if (!target) {
+        return { success: false, error: 'Selected manager not found.' };
+      }
+      if (target.role === 'COMPANY_ADMIN') {
+        return { success: false, error: 'User is already a Company Admin.' };
+      }
+
+      const prevAdminName = currentUser?.name || 'Previous Admin';
+
+      // Promote target manager to COMPANY_ADMIN and demote previous admin to MANAGER
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id === target.id) {
+            return { ...u, role: 'COMPANY_ADMIN' as const, status: 'Active' as const };
+          }
+          if (currentUser && u.id === currentUser.id) {
+            return { ...u, role: 'MANAGER' as const, scope: 'Organization-wide' };
+          }
+          return u;
+        })
+      );
+
+      // Update current organization contact email
+      setCurrentOrg((prev) => ({
+        ...prev,
+        contactEmail: target.email,
+      }));
+
+      // Log ownership transfer
+      setActivityLogs((prev) => [
+        {
+          id: `log-${Date.now()}`,
+          memberName: prevAdminName,
+          memberRole: 'Company Admin',
+          activity: `Ownership transferred to ${target.name} (${target.email})`,
+          when: 'Just now',
+        },
+        ...prev,
+      ]);
+
+      return {
+        success: true,
+        newAdminName: target.name,
+        newAdminEmail: target.email,
+      };
+    } else {
+      const cleanEmail = payload.email.trim().toLowerCase();
+      const cleanName = payload.name.trim();
+
+      if (!cleanEmail || !cleanName) {
+        return { success: false, error: 'Please enter name and work email.' };
+      }
+
+      // Check if user already exists
+      const existing = users.find(
+        (u) =>
+          u.email.toLowerCase() === cleanEmail &&
+          (!u.workspaceCode || u.workspaceCode.toUpperCase() === ws.toUpperCase())
+      );
+      if (existing) {
+        return {
+          success: false,
+          error: `An account with ${cleanEmail} already exists in this workspace. Please select 'Existing Manager' instead.`,
+        };
+      }
+
+      const newAdminId = `admin-${Date.now()}`;
+      const newAdmin: User = {
+        id: newAdminId,
+        name: cleanName,
+        email: cleanEmail,
+        password: 'password123',
+        role: 'COMPANY_ADMIN',
+        status: 'Pending',
+        workspaceCode: ws,
+        avatarInitials:
+          cleanName
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || 'AD',
+      };
+
+      setUsers((prev) => [newAdmin, ...prev]);
+
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+      const activationUrl = `${origin}/activate-account?ws=${encodeURIComponent(ws)}&email=${encodeURIComponent(cleanEmail)}`;
+
+      setActivityLogs((prev) => [
+        {
+          id: `log-${Date.now()}`,
+          memberName: currentUser?.name || 'Administrator',
+          memberRole: 'Company Admin',
+          activity: `Ownership transfer initiated for ${cleanName} (${cleanEmail})`,
+          when: 'Just now',
+        },
+        ...prev,
+      ]);
+
+      return {
+        success: true,
+        newAdminName: cleanName,
+        newAdminEmail: cleanEmail,
+        activationUrl,
+      };
+    }
+  };
+
   const addManager = (
     name: string,
     email: string
@@ -367,7 +555,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     workspaceCode: string,
     email: string,
     newPassword: string
-  ): { success: boolean; error?: string } => {
+  ): { success: boolean; role?: UserRole; error?: string } => {
     const cleanWorkspace = workspaceCode.trim().toUpperCase();
     const cleanEmail = email.trim().toLowerCase();
 
@@ -414,25 +602,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
       ]);
 
-      return { success: true };
+      return { success: true, role: 'MANAGER' as const };
     }
 
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === targetUser.id) {
-          const updated = {
-            ...u,
-            email: cleanEmail, // sync exact email address
-            status: 'Active' as const,
-            password: newPassword,
-          };
-          setCurrentUser(updated);
-          setToken(`jwt-token-${updated.role}-${Date.now()}`);
-          return updated;
-        }
-        return u;
-      })
-    );
+    if (targetUser.role === 'COMPANY_ADMIN') {
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id === targetUser.id) {
+            const updated = {
+              ...u,
+              email: cleanEmail,
+              status: 'Active' as const,
+              password: newPassword,
+            };
+            setCurrentUser(updated);
+            setToken(`jwt-token-COMPANY_ADMIN-${Date.now()}`);
+            return updated;
+          }
+          if (u.role === 'COMPANY_ADMIN' && (!u.workspaceCode || u.workspaceCode.toUpperCase() === cleanWorkspace)) {
+            return { ...u, role: 'MANAGER' as const, scope: 'Organization-wide' };
+          }
+          return u;
+        })
+      );
+      setCurrentOrg((prev) => ({ ...prev, contactEmail: cleanEmail }));
+    } else {
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id === targetUser.id) {
+            const updated = {
+              ...u,
+              email: cleanEmail,
+              status: 'Active' as const,
+              password: newPassword,
+            };
+            setCurrentUser(updated);
+            setToken(`jwt-token-${updated.role}-${Date.now()}`);
+            return updated;
+          }
+          return u;
+        })
+      );
+    }
 
     setActivityLogs((prev) => [
       {
@@ -445,7 +656,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...prev,
     ]);
 
-    return { success: true };
+    return { success: true, role: targetUser.role };
   };
 
   const activateManagerDirectly = (id: string) => {
@@ -510,12 +721,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         isAuthenticated: !!currentUser && !!token,
         user: currentUser,
+        primaryAdmin,
         organization: currentOrg,
         token,
         login,
         logout,
         registerOrganization,
         updateOrganization,
+        updateAdminProfile,
+        transferOwnership,
         managers,
         addManager,
         resendActivation,
