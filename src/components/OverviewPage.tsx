@@ -2,7 +2,13 @@ import { warehouseProgress } from './monitorData';
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
-export function OverviewPage() {
+export function OverviewPage({
+  onViewAlert,
+  onNavigateWarehouses,
+}: {
+  onViewAlert?: () => void;
+  onNavigateWarehouses?: () => void;
+}) {
   const stats = [
     { label: 'Active warehouses', value: warehouseProgress.length },
     { label: 'Tasks underway', value: sum(warehouseProgress.map((w) => w.total - w.completed)) },
@@ -31,7 +37,9 @@ export function OverviewPage() {
             <h3>Equipment reading outside range</h3>
             <p className="muted">{alertWarehouse.warehouse} warehouse · Supervisor notified</p>
           </div>
-          <button type="button" className="secondary-btn">View alert</button>
+          <button type="button" className="secondary-btn cursor-pointer" onClick={onViewAlert}>
+            View alert
+          </button>
         </div>
       )}
 
@@ -45,15 +53,28 @@ export function OverviewPage() {
             {warehouseProgress.map((w) => (
               <tr key={w.warehouse}>
                 <td>
-                  <div className="task-title">{w.warehouse} warehouse</div>
+                  <div
+                    className="task-title hover:underline cursor-pointer"
+                    onClick={onNavigateWarehouses}
+                  >
+                    {w.warehouse} warehouse
+                  </div>
                   <div className="task-code">{w.locations} locations</div>
                 </td>
                 <td>{w.supervisor}</td>
                 <td>{w.completed} of {w.total}</td>
                 <td>
-                  {w.openAlerts > 0
-                    ? <span className="link-btn">{w.openAlerts} open alerts</span>
-                    : <span className="muted">No alerts</span>}
+                  {w.openAlerts > 0 ? (
+                    <button
+                      type="button"
+                      className="link-btn cursor-pointer"
+                      onClick={onViewAlert}
+                    >
+                      {w.openAlerts} open alerts
+                    </button>
+                  ) : (
+                    <span className="muted">No alerts</span>
+                  )}
                 </td>
               </tr>
             ))}

@@ -10,9 +10,11 @@ import {
   LogOut,
   UsersRound,
   Warehouse as WarehouseIcon,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { sendActivationEmail } from "../../services/emailService";
 import "../../App.css";
 import "../../TaskModule.css";
 import siteTraceLogo from "../../assets/SiteTrace-logo.svg";
@@ -107,6 +109,7 @@ function ManagerShell() {
   const [page, setPage] = useState<Page>("overview");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [isTemplateEditing, setIsTemplateEditing] = useState(false);
+  const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
 
   // Alerts, Rules, Notifications & Audit Log navigation state
   const sessionUser = useSessionUser();
@@ -272,10 +275,25 @@ function ManagerShell() {
     setSupervisors((prev) => [...prev, s]);
   };
 
-  const sendActivation = (id: string) => {
+  const sendActivation = async (id: string) => {
+    const supervisor = supervisors.find((s) => s.id === id);
     setSupervisors((prev) =>
       prev.map((s) => (s.id === id ? { ...s, activationSent: true } : s))
     );
+    if (supervisor) {
+      try {
+        const ws = organization?.workspaceCode || "NOVA-7K3P";
+        const origin = window.location.origin || "http://localhost:5173";
+        await sendActivationEmail({
+          toEmail: supervisor.email,
+          managerName: supervisor.name,
+          workspaceCode: ws,
+          activationUrl: `${origin}/activate-account?ws=${encodeURIComponent(ws)}&email=${encodeURIComponent(supervisor.email)}`,
+        });
+      } catch (err) {
+        console.warn("Real email dispatch fallback:", err);
+      }
+    }
   };
 
   const reviewSubmission = (
@@ -440,7 +458,7 @@ function ManagerShell() {
 
             <button
               type="button"
-              onClick={handleSignOut}
+              onClick={() => setIsSignOutModalOpen(true)}
               className="nav-item sign-out cursor-pointer text-left w-full border-none bg-transparent hover:bg-slate-100/50"
               title="Sign Out"
             >
@@ -459,19 +477,17 @@ function ManagerShell() {
             </div>
 
             <div className="topbar-actions">
-              {page === "alerts" && (
-                <button
-                  type="button"
-                  className="al-link-btn"
-                  disabled={isTemplateEditing}
-                  onClick={alertsNav.openNotifications}
-                >
-                  Notifications
-                </button>
-              )}
+              <button
+                type="button"
+                className="al-link-btn cursor-pointer"
+                disabled={isTemplateEditing}
+                onClick={alertsNav.openNotifications}
+              >
+                Notifications
+              </button>
               <NotificationBell nav={alertsNav} />
               <span className="avatar">
-                {user?.avatarInitials || "MG"}
+                {user?.avatarInitials || "DW"}
               </span>
             </div>
           </header>
@@ -592,7 +608,12 @@ function ManagerShell() {
             {/* TAB 4: TASK MANAGEMENT & SUPERVISORS (Module 4) */}
             {isM4Page && (
               <div className="m4">
-                {page === "overview" && <OverviewPage />}
+                {page === "overview" && (
+                  <OverviewPage
+                    onViewAlert={() => alertsNav.openAlerts()}
+                    onNavigateWarehouses={() => setPage("warehouses")}
+                  />
+                )}
                 {page === "supervisors" && (
                   <SupervisorsPage
                     supervisors={supervisors}
@@ -663,6 +684,75 @@ function ManagerShell() {
         </div>
         <Toaster />
       </div>
+
+      {/* Figma Screen #3: Sign Out Confirmation Modal */}
+      {isSignOutModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setIsSignOutModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold">
+                  <LogOut className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Sign out of SiteTrace?</h3>
+                  <p className="text-xs text-slate-500">Your current web session will end.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSignOutModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* User Identity Box */}
+            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#ede9fe] text-[#5542f6] flex items-center justify-center font-bold text-sm border border-purple-200">
+                  {user?.avatarInitials || "DW"}
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-900 text-sm block">
+                    {user?.name || "Dinesh Wijesinghe"}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    Manager · {organization?.name || "Nova Industries"}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-200/60 text-[11px] text-slate-500 font-mono">
+                Workspace: <span className="font-semibold text-slate-700">{organization?.workspaceCode || "NOVA-7K3P"}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSignOutModalOpen(false)}
+                className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="px-4 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </ReviewContext.Provider>
   );
 }
