@@ -63,11 +63,9 @@ function getErrorMessage(payload: unknown, status: number): string {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const baseUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
-
-  if (!baseUrl) {
-    throw new ApiError("VITE_API_URL is not configured.", 0);
-  }
+  const baseUrl =
+    import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "") ||
+    "http://localhost:3000/api/v1";
 
   const headers = new Headers(options.headers);
 

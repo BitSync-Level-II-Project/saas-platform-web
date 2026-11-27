@@ -470,6 +470,7 @@ body {
   line-height: 1.6;
 }
 
+button.nav-item,
 .sidebar-nav > button.nav-item {
   width: 100%;
   border: 0;
@@ -482,18 +483,34 @@ body {
   text-align: left;
   cursor: pointer;
   appearance: none;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
+button.nav-item:hover:not(:disabled),
+.sidebar-nav > button.nav-item:hover:not(:disabled) {
+  background: #f4f5f9;
+  color: #20223d;
+}
+
+button.nav-item:disabled,
 .sidebar-nav > button.nav-item:disabled {
   opacity: 1;
   cursor: default;
 }
 
+button.nav-item.nav-item--active,
 .sidebar-nav > button.nav-item.nav-item--active {
   color: #4f46e5;
   background: #ecebff;
 }
 
+button.nav-item.nav-item--active:hover,
+.sidebar-nav > button.nav-item.nav-item--active:hover {
+  color: #4f46e5;
+  background: #ecebff;
+}
+
+button.nav-item:focus-visible,
 .sidebar-nav > button.nav-item:focus-visible {
   outline: 2px solid #4f46e5;
   outline-offset: 2px;

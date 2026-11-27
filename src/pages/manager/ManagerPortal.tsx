@@ -392,14 +392,19 @@ function ManagerShell() {
         reassign,
       }}
     >
-      <div className="layout">
+      <div className="manager-layout">
         {/* Sidebar */}
         <aside className="sidebar">
           <div className="brand">
-            <img src={siteTraceLogo} alt="SiteTrace Logo" />
+            <img className="brand-logo" src={siteTraceLogo} alt="SiteTrace Logo" />
           </div>
 
-          <nav className="nav">
+          <div className="organization-card">
+            <strong>{organization?.name || "Nova Industries"}</strong>
+            <small>Manager</small>
+          </div>
+
+          <nav className="sidebar-nav" aria-label="Manager navigation">
             {menuItems.map((item) => {
               if (item.label === "Audit log" && !canViewAudit(sessionUser.role)) {
                 return null;
@@ -421,8 +426,11 @@ function ManagerShell() {
                     key={item.label}
                     type="button"
                     disabled={isTemplateEditing}
-                    className={`nav-item ${isActive ? "active" : ""}`}
+                    className={`nav-item ${isActive ? "nav-item--active" : ""}`}
                     onClick={() => {
+                      if (target === "warehouses") {
+                        setSelectedWarehouse(null);
+                      }
                       if (target === "alerts") {
                         alertsNav.openAlerts();
                         return;
@@ -437,7 +445,7 @@ function ManagerShell() {
               }
 
               return (
-                <div className="nav-item" key={item.label}>
+                <div className={`nav-item ${isActive ? "nav-item--active" : ""}`} key={item.label}>
                   <Icon size={17} strokeWidth={1.8} />
                   <span>{item.label}</span>
                 </div>
