@@ -631,7 +631,7 @@ function Shell() {
             {/* TAB 4: TASK MANAGEMENT & SUPERVISORS (Module 4) */}
             {isM4Page && (
               <div className="m4">
-                {page === "overview" && <OverviewPage tasks={tasks} />}
+                {page === "overview" && <OverviewPage />}
                 {page === "supervisors" && (
                   <SupervisorsPage
                     supervisors={supervisors}
