@@ -19,10 +19,10 @@ export interface Task {
 export type NewTask = Omit<Task, 'id' | 'code' | 'status' | 'assigneeType' | 'assignee'>;
 
 export const STATUSES: TaskStatus[] = ['Assigned', 'In progress', 'Complete'];
-export const WAREHOUSES = ['Colombo', 'Kandy', 'Galle'];
-export const LOCATIONS = ['Machine room', 'Loading bay', 'Storage aisle'];
+export const WAREHOUSES = ['Colombo', 'Gampaha'];
+export const LOCATIONS = ['Loading bay', 'Ground floor', 'Storage aisle'];
 export const TEMPLATES = ['Equipment inspection', 'Storage check', 'Safety walk', 'Temperature monitoring'];
-export const SUPERVISORS = ['Malith Senanayake', 'Tharushi Perera'];
+export const SUPERVISORS = ['Tharushi Perera', 'Malith Senanayake'];
 
 const isoFromToday = (offsetDays: number) => {
   const d = new Date();
@@ -46,23 +46,23 @@ export const statusClass = (s: TaskStatus) =>
 export const initialTasks: Task[] = [
   {
     id: '1', code: 'TSK-1042', title: 'Morning equipment check',
-    warehouse: 'Colombo', location: 'Machine room', template: 'Equipment inspection',
-    supervisor: 'Malith Senanayake', dueDate: isoFromToday(0),
+    warehouse: 'Colombo', location: 'Loading bay', template: 'Equipment inspection',
+    supervisor: 'Tharushi Perera', dueDate: isoFromToday(0),
     instructions: 'Read display and attach a clear photo.', status: 'In progress',
     assigneeType: 'Worker', assignee: 'Kavindu Perera',
   },
   {
     id: '2', code: 'TSK-1041', title: 'Loading bay inspection',
     warehouse: 'Colombo', location: 'Loading bay', template: 'Safety walk',
-    supervisor: 'Malith Senanayake', dueDate: isoFromToday(0),
+    supervisor: 'Tharushi Perera', dueDate: isoFromToday(0),
     instructions: 'Check bay doors and floor markings.', status: 'Assigned',
     assigneeType: null, assignee: null,
   },
   {
-    id: '3', code: 'TSK-1038', title: 'Storage aisle check',
-    warehouse: 'Galle', location: 'Storage aisle', template: 'Storage check',
-    supervisor: 'Tharushi Perera', dueDate: isoFromToday(-1),
-    instructions: 'Count pallets in aisles A to C.', status: 'Complete',
+    id: '3', code: 'TSK-1038', title: 'Intake inventory check',
+    warehouse: 'Gampaha', location: 'Ground floor', template: 'Storage check',
+    supervisor: 'Malith Senanayake', dueDate: isoFromToday(-1),
+    instructions: 'Count pallets in bays A to C.', status: 'Complete',
     assigneeType: 'Worker', assignee: 'Amali Wijesinghe',
   },
 ];

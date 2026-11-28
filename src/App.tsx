@@ -25,6 +25,7 @@ import WarehouseFilters from "./components/WarehouseFilters";
 import WarehouseTable from "./components/WarehouseTable";
 import WarehouseDetail from "./components/WarehouseDetail";
 import AddWarehouseModal from "./components/AddWarehouseModal";
+import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import { warehouseService } from "./services/warehouseService";
 import type { Warehouse } from "./types";
 
@@ -129,6 +130,9 @@ function Shell() {
   const [warehouseTotal, setWarehouseTotal] = useState(0);
   const [warehouseTotalPages, setWarehouseTotalPages] = useState(1);
   const [isAddWarehouseModalOpen, setIsAddWarehouseModalOpen] = useState(false);
+  const [warehouseToDelete, setWarehouseToDelete] = useState<Warehouse | null>(null);
+  const [isDeletingWarehouse, setIsDeletingWarehouse] = useState(false);
+  const [deleteWarehouseError, setDeleteWarehouseError] = useState<string | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -192,24 +196,33 @@ function Shell() {
     triggerRefresh();
   };
 
-  const handleDeleteWarehouse = async (warehouse: Warehouse) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${warehouse.name}"? This action cannot be undone.`,
-    );
-    if (!confirmed) return;
+  const handleDeleteWarehouse = (warehouse: Warehouse) => {
+    setDeleteWarehouseError(null);
+    setWarehouseToDelete(warehouse);
+  };
+
+  const handleConfirmDeleteWarehouse = async () => {
+    if (!warehouseToDelete) return;
+    setIsDeletingWarehouse(true);
+    setDeleteWarehouseError(null);
 
     try {
-      await warehouseService.deleteWarehouse(warehouse.id);
-      if (selectedWarehouse && selectedWarehouse.id === warehouse.id) {
+      await warehouseService.deleteWarehouse(warehouseToDelete.id);
+      if (selectedWarehouse && selectedWarehouse.id === warehouseToDelete.id) {
         setSelectedWarehouse(null);
       }
+      setWarehouseToDelete(null);
       if (warehouses.length === 1 && warehousePage > 1) {
         setWarehousePage((prev) => Math.max(1, prev - 1));
       } else {
         triggerRefresh();
       }
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to delete warehouse");
+      setDeleteWarehouseError(
+        err instanceof Error ? err.message : "Failed to delete warehouse",
+      );
+    } finally {
+      setIsDeletingWarehouse(false);
     }
   };
 
@@ -509,106 +522,111 @@ function Shell() {
             )}
 
             {/* TAB 3: WAREHOUSES MODULE (Module 2) */}
-            {page === "warehouses" &&
-              (selectedWarehouse ? (
-                <WarehouseDetail
-                  warehouse={{
-                    ...selectedWarehouse,
-                    locations: warehouseService.getLocations(selectedWarehouse.id).length,
-                  }}
-                  onBack={() => {
-                    setSelectedWarehouse(null);
-                    triggerRefresh();
-                  }}
-                  onLocationAdded={triggerRefresh}
-                  onWarehouseUpdated={(updated) => {
-                    setSelectedWarehouse(updated);
-                    triggerRefresh();
-                  }}
-                  onDeleteWarehouse={handleDeleteWarehouse}
-                />
-              ) : (
-                <section className="warehouses-section">
-                  <header
-                    className="page-header"
-                    style={{ marginBottom: "1.5rem" }}
-                  >
-                    <h1
-                      className="page-title"
-                      style={{ fontSize: "1.5rem", fontWeight: 700 }}
-                    >
-                      Warehouses
-                    </h1>
-                    <p
-                      className="page-subtitle"
-                      style={{ color: "#64748B", fontSize: "0.875rem" }}
-                    >
-                      Manage warehouses and their locations.
-                    </p>
-                  </header>
-
-                  <WarehouseFilters
-                    searchTerm={warehouseSearchTerm}
-                    onSearchChange={(term) => {
-                      setWarehouseSearchTerm(term);
-                      setWarehousePage(1);
+            {page === "warehouses" && (
+              <>
+                {selectedWarehouse ? (
+                  <WarehouseDetail
+                    warehouse={selectedWarehouse}
+                    onBack={() => {
+                      setSelectedWarehouse(null);
+                      triggerRefresh();
                     }}
-                    statusFilter={warehouseStatusFilter}
-                    onStatusChange={(status) => {
-                      setWarehouseStatusFilter(status);
-                      setWarehousePage(1);
+                    onLocationAdded={triggerRefresh}
+                    onWarehouseUpdated={(updated) => {
+                      setSelectedWarehouse(updated);
+                      triggerRefresh();
                     }}
-                    onAddClick={() => setIsAddWarehouseModalOpen(true)}
+                    onDeleteWarehouse={handleDeleteWarehouse}
                   />
+                ) : (
+                  <section className="warehouses-section">
+                    <header className="page-header">
+                      <h1 className="page-title">Warehouses</h1>
+                      <p className="page-subtitle">
+                        Manage warehouses and their locations.
+                      </p>
+                    </header>
 
-                  {warehouseError && (
-                    <div
-                      style={{
-                        backgroundColor: "#FEE2E2",
-                        color: "#B91C1C",
-                        padding: "12px 16px",
-                        borderRadius: "8px",
-                        marginBottom: "16px",
-                        fontSize: "14px",
+                    <WarehouseFilters
+                      searchTerm={warehouseSearchTerm}
+                      onSearchChange={(term) => {
+                        setWarehouseSearchTerm(term);
+                        setWarehousePage(1);
                       }}
-                    >
-                      ⚠️ <strong>Backend Offline:</strong> {warehouseError}.
-                      Ensure backend is running (<code>npm run start:dev</code>).
-                    </div>
-                  )}
-
-                  {isLoadingWarehouses && warehouses.length === 0 ? (
-                    <div
-                      style={{
-                        padding: "40px",
-                        textAlign: "center",
-                        color: "#6B7280",
+                      statusFilter={warehouseStatusFilter}
+                      onStatusChange={(status) => {
+                        setWarehouseStatusFilter(status);
+                        setWarehousePage(1);
                       }}
-                    >
-                      Loading warehouses from database...
-                    </div>
-                  ) : (
-                    <WarehouseTable
-                      warehouses={warehouses}
-                      total={warehouseTotal}
-                      currentPage={warehousePage}
-                      totalPages={warehouseTotalPages}
-                      limit={warehouseLimit}
-                      onPageChange={(p) => setWarehousePage(p)}
-                      onOpenWarehouse={(warehouse) =>
-                        setSelectedWarehouse(warehouse)
-                      }
-                      onDeleteWarehouse={handleDeleteWarehouse}
+                      onAddClick={() => setIsAddWarehouseModalOpen(true)}
                     />
-                  )}
 
-                  <AddWarehouseModal
-                    isOpen={isAddWarehouseModalOpen}
-                    onClose={() => setIsAddWarehouseModalOpen(false)}
-                    onAddWarehouse={handleAddWarehouse}
-                  />
-                </section>
-              ))}
+                    {warehouseError && (
+                      <div
+                        style={{
+                          backgroundColor: "#FEE2E2",
+                          color: "#B91C1C",
+                          padding: "12px 16px",
+                          borderRadius: "8px",
+                          marginBottom: "16px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        ⚠️ <strong>Backend Offline:</strong> {warehouseError}.
+                        Ensure backend is running (<code>npm run start:dev</code>).
+                      </div>
+                    )}
+
+                    {isLoadingWarehouses && warehouses.length === 0 ? (
+                      <div
+                        style={{
+                          padding: "40px",
+                          textAlign: "center",
+                          color: "#6B7280",
+                        }}
+                      >
+                        Loading warehouses from database...
+                      </div>
+                    ) : (
+                      <WarehouseTable
+                        warehouses={warehouses}
+                        total={warehouseTotal}
+                        currentPage={warehousePage}
+                        totalPages={warehouseTotalPages}
+                        limit={warehouseLimit}
+                        onPageChange={(p) => setWarehousePage(p)}
+                        onOpenWarehouse={(warehouse) =>
+                          setSelectedWarehouse(warehouse)
+                        }
+                        onDeleteWarehouse={handleDeleteWarehouse}
+                      />
+                    )}
+
+                    <AddWarehouseModal
+                      isOpen={isAddWarehouseModalOpen}
+                      onClose={() => setIsAddWarehouseModalOpen(false)}
+                      onAddWarehouse={handleAddWarehouse}
+                    />
+                  </section>
+                )}
+
+                <ConfirmDeleteModal
+                  isOpen={warehouseToDelete !== null}
+                  title="Delete Warehouse"
+                  itemName={warehouseToDelete?.name || ""}
+                  itemType="warehouse"
+                  isDeleting={isDeletingWarehouse}
+                  errorMessage={deleteWarehouseError}
+                  onConfirm={handleConfirmDeleteWarehouse}
+                  onClose={() => {
+                    if (!isDeletingWarehouse) {
+                      setWarehouseToDelete(null);
+                      setDeleteWarehouseError(null);
+                    }
+                  }}
+                />
+              </>
+            )}
 
             {/* TAB 4: TASK MANAGEMENT & SUPERVISORS (Module 4) */}
             {isM4Page && (
